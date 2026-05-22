@@ -84,7 +84,7 @@ vaultflow/
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/<your-username>/vaultflow.git
+   git clone https://github.com/dotm-dev/vaultflow.git
    cd vaultflow
    ```
 
