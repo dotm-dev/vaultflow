@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+:root {
+  --color-nature-green: #7BA05B;   /* Sage Green */
+  --color-ocean-blue: #5C7C8A;     /* Slate Blue */
+  --color-earth-clay: #D9735A;     /* Terracotta */
+  --color-sand-gold: #D4AE5E;      /* Warm Sand */
+  --color-plum-purple: #8B6B7B;    /* Muted Plum */
+  --color-sky-teal: #7AA89F;       /* Sage Teal */
+  --color-bark-brown: #9E806E;     /* Earth Bark */
+  --color-forest-moss: #506655;    /* Deep Moss */
+
+  /* Zen Garden Dark Mode */
+  --surface-dark: #1A2521;
+  --surface-container: #22302A;
+  --on-surface: #E6EDE9;
+  --on-surface-variant: #A4B5AC;
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  --bg-glow-opacity: 0.05;
+  --image-opacity: 0.8;
+}
+
+/* Zen Garden Light Mode */
+.light {
+  --surface-dark: #F5F3E9;
+  --surface-container: #FFFFFF;
+  --on-surface: #2E3833;
+  --on-surface-variant: #6B7A72;
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-border: rgba(0, 0, 0, 0.05);
+  --bg-glow-opacity: 0.03;
+  --image-opacity: 0.95;
+}
+
+@theme {
+  --color-nature-green: var(--color-nature-green);
+  --color-ocean-blue: var(--color-ocean-blue);
+  --color-earth-clay: var(--color-earth-clay);
+  --color-sand-gold: var(--color-sand-gold);
+  --color-plum-purple: var(--color-plum-purple);
+  --color-sky-teal: var(--color-sky-teal);
+  --color-bark-brown: var(--color-bark-brown);
+  --color-forest-moss: var(--color-forest-moss);
+  --color-surface-dark: var(--surface-dark);
+  --color-surface-container: var(--surface-container);
+  --color-on-surface: var(--on-surface);
+  --color-on-surface-variant: var(--on-surface-variant);
+  
+  --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+}
+
+@layer base {
+  body {
+    @apply font-sans bg-surface-dark text-on-surface antialiased transition-colors duration-500;
+  }
+
+  button,
+  [role="button"],
+  [role="checkbox"],
+  input[type="button"],
+  input[type="submit"],
+  select,
+  a {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  button[disabled],
+  input[type="button"]:disabled,
+  input[type="submit"]:disabled,
+  select:disabled,
+  [role="button"][aria-disabled="true"],
+  [role="checkbox"][aria-disabled="true"],
+  .disabled {
+    cursor: not-allowed !important;
+  }
+}
+
+.glass-card {
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.03);
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  @apply shadow-xl;
+}
+
+.glass-glow-teal {
+  @apply shadow-[0_0_40px_rgba(123,160,91,0.1)] transition-all duration-500;
+}
+
+.fab-gradient {
+  background: linear-gradient(135deg, var(--color-nature-green), var(--color-ocean-blue));
+}
+
+.spending-gradient {
+  background: linear-gradient(to bottom right, var(--color-earth-clay), #E08973);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+/* Disable default arrows in Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Disable default arrows in Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+

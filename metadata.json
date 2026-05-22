@@ -1,0 +1,8 @@
+{
+  "name": "VaultFlow",
+  "description": "A visual-first, privacy-focused financial dashboard with local encryption and AI insights.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

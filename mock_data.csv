@@ -1,0 +1,101 @@
+﻿"Date from:;=""01.01.2026""",
+"Date to:;=""31.01.2026""",
+"Category:;=""All""",
+"Currency:;=""CHF""",
+,
+,
+Date;Type of transaction;Notification text;Credit in CHF;Debit in CHF;Tag;Category,
+,
+"31.01.2026;Entry;""Acquisto/servizio del 31.01.2026"," BENNET LAVENA PONTE TR"";;-178.65;;Shopping // Supermarkets"
+"31.01.2026;Entry;""Acquisto/servizio del 31.01.2026"," MIZUMI SAS DI HU DONG."";;-49.9;;Leisure // Food services"
+"31.01.2026;Entry;""Prezzo per pacchetto bancario Smart"";;-5;;Finances // Fees",
+"30.01.2026;Entry;""Acquisto/servizio del 30.01.2026"," Coop-1383 Pregassona"";;-25.45;;Shopping // Supermarkets"
+"30.01.2026;Entry;""Acquisto/shopping online del 30.01.2026"," Google Legend of Mush"";;-0.9;;Residing // Communication"
+"30.01.2026;Entry;""Acquisto/servizio del 30.01.2026"," STRAPANINO SAGL"";;-21;;Leisure // Food services"
+"30.01.2026;Entry;""Addebito a AMAG Leasing AG"";;-416.45;;Mobility // Private transport",
+"30.01.2026;Entry;""Addebito a Besenzoni Sofia"";;-250;;Expenditures other",
+"30.01.2026;Entry;""Addebito a Tanya Velichkova"";;-200;;Expenditures other",
+"29.01.2026;Entry;""Acquisto/servizio del 29.01.2026"," Clinica Ars Medica"";;-2;;Living // Healthcare"
+"29.01.2026;Entry;""Addebito a Nadia Bosoni"";;-2550;;Expenditures other",
+"28.01.2026;Entry;""Acquisto/servizio del 28.01.2026"," Coop-1383 Pregassona"";;-30.65;;Shopping // Supermarkets"
+"28.01.2026;Entry;""Acquisto/shopping online del 28.01.2026"," FAL FEATURES LABELS"";;-40.47;;Residing // Communication"
+"28.01.2026;Entry;""Acquisto/shopping online del 28.01.2026"," Google Legend of Mush"";;-8.8;;Residing // Communication"
+"28.01.2026;Entry;""Acquisto/shopping online del 28.01.2026"," Google Legend of Mush"";;-8.8;;Residing // Communication"
+"28.01.2026;Entry;""Acquisto/servizio del 28.01.2026"," Coop-1383 Pregassona"";;-0.05;;Shopping // Supermarkets"
+"28.01.2026;Entry;""Acquisto/servizio del 28.01.2026"," Coop-1383 Pregassona"";;-19.65;;Shopping // Supermarkets"
+"27.01.2026;Entry;""Acquisto/servizio del 27.01.2026"," Lidl 292"";;-6.05;;Shopping // Supermarkets"
+"26.01.2026;Entry;""Acquisto/servizio del 26.01.2026"," CONTRADA DEI PATRIZI"";;-9.3;;Living // Healthcare"
+"26.01.2026;Entry;""Acquisto/servizio del 26.01.2026"," Coop-4245 Canobbio Resega"";;-16.8;;Shopping // Supermarkets"
+"26.01.2026;Entry;""Acquisto/servizio del 26.01.2026"," Coop-2448 Viganello"";;-44.35;;Shopping // Supermarkets"
+"26.01.2026;Entry;""Acquisto/servizio del 26.01.2026"," SV (Svizzera) SA"";;-6.5;;Leisure // Food services"
+"25.01.2026;Entry;""Acquisto/servizio del 25.01.2026"," Posteggio Campo Marzio"";;-3;;Mobility // Private transport"
+"25.01.2026;Entry;""Acquisto/servizio del 25.01.2026"," Caffè Pascucci"";;-15;;Leisure // Food services"
+"25.01.2026;Entry;""Acquisto/servizio del 25.01.2026"," ASPIT DIREZ. USCITA -"";;-2.39;;Mobility // Public transport"
+"25.01.2026;Entry;""Acquisto/servizio del 25.01.2026"," FOUND VERTEMATE"";;-35.1;;Leisure // Food services"
+"24.01.2026;Entry;""Acquisto/servizio del 24.01.2026"," ASPIT DIREZ.ENTRATA -"";;-2.39;;Mobility // Public transport"
+"24.01.2026;Entry;""Acquisto/servizio del 24.01.2026"," Posteggio Campo Marzio"";;-4;;Mobility // Private transport"
+"24.01.2026;Entry;""Acquisto/servizio del 24.01.2026"," Manor Sud SA - 825 (LUGR)"";;-29.2;;Shopping // Shopping other"
+"24.01.2026;Entry;""Acquisto/servizio del 24.01.2026"," Eni Lugano Via Ciani"";;-70.49;;Mobility // Private transport"
+"23.01.2026;Entry;""TWINT acquisto/servizio McDonald's Lugano Pazzallo"";;-24.5;;Leisure // Food services",
+"23.01.2026;Entry;""Acquisto/servizio del 23.01.2026"," Rist. New Saint Louis"";;-20.9;;Leisure // Food services"
+"23.01.2026;Entry;""Accredito di Scuola Universitaria Professionale"";5342.35;;;Other incomings",
+"23.01.2026;Entry;""TWINT ricevimento di denaro da +41765413756"";1300;;;Other incomings",
+"22.01.2026;Entry;""Acquisto/shopping online del 22.01.2026"," Google Legend of Mush"";;-4.3;;Residing // Communication"
+"22.01.2026;Entry;""Acquisto/shopping online del 22.01.2026"," Google Legend of Mush"";;-0.9;;Residing // Communication"
+"22.01.2026;Entry;""Acquisto/shopping online del 22.01.2026"," Google Legend of Mush"";;-8.8;;Residing // Communication"
+"22.01.2026;Entry;""Acquisto/shopping online del 22.01.2026"," Google Legend of Mush"";;-8.8;;Residing // Communication"
+"22.01.2026;Entry;""Acquisto/servizio del 22.01.2026"," Migros Cassarate Snacky"";;-72.75;;Shopping // Supermarkets"
+"21.01.2026;Entry;""Acquisto/shopping online del 21.01.2026"," Google Legend of Mush"";;-0.9;;Residing // Communication"
+"21.01.2026;Entry;""Acquisto/shopping online del 21.01.2026"," Google Legend of Mush"";;-4.3;;Residing // Communication"
+"21.01.2026;Entry;""Acquisto/shopping online del 21.01.2026"," Google Legend of Mush"";;-0.9;;Residing // Communication"
+"20.01.2026;Entry;""Acquisto/shopping online del 20.01.2026"," Google Legend of Mush"";;-8.8;;Residing // Communication"
+"20.01.2026;Entry;""Acquisto/servizio del 20.01.2026"," Lidl 292"";;-13.95;;Shopping // Supermarkets"
+"20.01.2026;Entry;""Acquisto/servizio del 20.01.2026"," Coop-2448 Viganello"";;-26.25;;Shopping // Supermarkets"
+"20.01.2026;Entry;""Acquisto/servizio del 20.01.2026"," SV (Svizzera) SA"";;-6.5;;Leisure // Food services"
+"20.01.2026;Entry;""Acquisto/shopping online del 20.01.2026"," Google Legend of Mush"";;-4.3;;Residing // Communication"
+"19.01.2026;Entry;""Acquisto/shopping online del 19.01.2026"," OPENAI *CHATGPT SUBSCR"";;-22.02;;Residing // Communication"
+"19.01.2026;Entry;""Acquisto/shopping online del 19.01.2026"," Google Legend of Mush"";;-0.9;;Residing // Communication"
+"18.01.2026;Entry;""TWINT invio di denaro a +41763191221"";;-55;;Finances // Transfers other",
+"17.01.2026;Entry;""Acquisto/shopping online del 17.01.2026"," Google Idle Cult Empi"";;-6.1;;Residing // Communication"
+"17.01.2026;Entry;""Acquisto/servizio del 17.01.2026"," Coop-1899 Lugano Nord"";;-108.65;;Shopping // Supermarkets"
+"17.01.2026;Entry;""Acquisto/shopping online del 17.01.2026"," Google Legend of Mush"";;-0.9;;Residing // Communication"
+"16.01.2026;Entry;""Acquisto/servizio del 16.01.2026"," Coop-2448 Viganello"";;-29.3;;Shopping // Supermarkets"
+"16.01.2026;Entry;""Acquisto/servizio del 16.01.2026"," SV (Svizzera) SA"";;-4.4;;Leisure // Food services"
+"15.01.2026;Entry;""Acquisto/shopping online del 15.01.2026"," Google Legend of Mush"";;-8.8;;Residing // Communication"
+"15.01.2026;Entry;""Acquisto/servizio del 15.01.2026"," Migros Pregassona"";;-3.3;;Shopping // Supermarkets"
+"15.01.2026;Entry;""Acquisto/servizio del 15.01.2026"," san bartolomeo"";;-39;;Leisure // Food services"
+"14.01.2026;Entry;""Acquisto/servizio del 14.01.2026"," Coop-1383 Pregassona"";;-71.8;;Shopping // Supermarkets"
+"14.01.2026;Entry;""TWINT acquisto/servizio SUPSI - Nuovo Campus Est"";;-20;;Shopping // Grocery",
+"14.01.2026;Entry;""Addebito a Sunrise GmbH"";;-141.8;;Residing // Communication",
+"13.01.2026;Entry;""Acquisto/servizio del 13.01.2026"," Coop-1383 Pregassona"";;-26.75;;Shopping // Supermarkets"
+"13.01.2026;Entry;""Acquisto/servizio del 13.01.2026"," Coop-2448 Viganello"";;-8.85;;Shopping // Supermarkets"
+"13.01.2026;Entry;""TWINT ricevimento di denaro da +41765098401"";2.2;;;Other incomings",
+"13.01.2026;Entry;""Acquisto/servizio del 13.01.2026"," SV (Svizzera) SA"";;-4.4;;Leisure // Food services"
+"12.01.2026;Entry;""Acquisto/servizio del 12.01.2026"," Coop-1383 Pregassona"";;-10.9;;Shopping // Supermarkets"
+"12.01.2026;Entry;""TWINT ricevimento di denaro da +41765098401"";2.2;;;Other incomings",
+"12.01.2026;Entry;""Acquisto/servizio del 12.01.2026"," SV (Svizzera) SA"";;-8.3;;Leisure // Food services"
+"11.01.2026;Entry;""Acquisto/shopping online del 11.01.2026"," Google Xavier Liard"";;-2.99;;Residing // Communication"
+"11.01.2026;Entry;""Acquisto/servizio del 11.01.2026"," Migros Molino Nuovo"";;-21.95;;Shopping // Supermarkets"
+"10.01.2026;Entry;""Acquisto/servizio del 10.01.2026"," L.07663.10120 Parking"";;-2;;Mobility // Private transport"
+"10.01.2026;Entry;""Acquisto/servizio del 10.01.2026"," Jack Jones"";;-76.95;;Shopping // Fashion"
+"10.01.2026;Entry;""Acquisto/servizio del 10.01.2026"," Coop-1989 Lugano Sud"";;-36.2;;Shopping // Supermarkets"
+"10.01.2026;Entry;""Acquisto/servizio del 10.01.2026"," SumUp *FULLYgrancia S"";;-26;;Leisure // Food services"
+"09.01.2026;Entry;""Acquisto/servizio del 09.01.2026"," Coop-2448 Viganello"";;-15.95;;Shopping // Supermarkets"
+"09.01.2026;Entry;""Acquisto/servizio del 09.01.2026"," Farmacia Coop Vitality"";;-44.85;;Living // Healthcare"
+"09.01.2026;Entry;""Acquisto/servizio del 09.01.2026"," Parking P-Resega"";;-1;;Mobility // Private transport"
+"08.01.2026;Entry;""CH-DD Aziende Industriali di Lugano"";;-128;;Expenditures other",
+"08.01.2026;Entry;""Addebito a Associazione 8Hz family coworking"";;-995;;Expenditures other",
+"07.01.2026;Entry;""Acquisto/servizio del 07.01.2026"," Pizzeria la Lupa"";;-18;;Leisure // Food services"
+"06.01.2026;Entry;""Addebito a Dr. GIULIO AIROLDI"";;-200;;Expenditures other",
+"06.01.2026;Entry;""Addebito a Dr. GIULIO AIROLDI"";;-150;;Expenditures other",
+"05.01.2026;Entry;""Acquisto/servizio del 05.01.2026"," Lidl 311"";;-49.9;;Shopping // Supermarkets"
+"05.01.2026;Entry;""Acquisto/servizio del 05.01.2026"," Service Station 777"";;-63.39;;Mobility // Private transport"
+"05.01.2026;Entry;""Acquisto/servizio del 05.01.2026"," BENNET LAVENA PONTE TR"";;-204.73;;Shopping // Supermarkets"
+"04.01.2026;Entry;""Acquisto/servizio del 04.01.2026"," Spaghetti Store SA"";;-65;;Leisure // Food services"
+"02.01.2026;Entry;""Acquisto/servizio del 02.01.2026"," ALDI Pregassona 60"";;-14.55;;Shopping // Supermarkets"
+"02.01.2026;Entry;""TWINT acquisto/servizio McDonald's Lugano Pazzallo"";;-28.4;;Leisure // Food services",
+"02.01.2026;Entry;""Acquisto/servizio del 02.01.2026"," NYX*MariaTheresiaGeros"";;-4;;Shopping // Grocery"
+"02.01.2026;Entry;""Acquisto/servizio del 02.01.2026"," Farmacia Torre SA"";;-44.8;;Living // Healthcare"
+,
+Disclaimer:,
+The document content was generated by customer filter settings. PostFinance is not responsible for the content or its completeness.,
