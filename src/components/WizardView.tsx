@@ -776,7 +776,7 @@ export default function WizardView({ onComplete, onCancel }: WizardViewProps) {
                 type="file" 
                 ref={fileInputRef} 
                 onChange={handleFileChange} 
-                accept=".csv" 
+                accept=".csv, text/csv, application/csv, text/comma-separated-values, application/vnd.ms-excel" 
                 className="hidden" 
               />
               

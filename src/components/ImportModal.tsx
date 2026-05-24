@@ -175,7 +175,7 @@ export default function ImportModal({ isOpen, onClose, onImport, currency }: Imp
                   type="file" 
                   ref={fileInputRef} 
                   onChange={handleFileChange} 
-                  accept=".csv" 
+                  accept=".csv, text/csv, application/csv, text/comma-separated-values, application/vnd.ms-excel" 
                   className="hidden" 
                 />
                 

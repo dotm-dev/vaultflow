@@ -940,13 +940,11 @@ export default function ExpectedBudgetView({ onBack, onSync, currency, thousands
                   await saveConfig('expected_budget_versions', JSON.stringify(updatedVersions));
                   await saveConfig('active_expected_budget_version_id', activeVersionId);
 
-                  // Sync with cloud on back navigation
+                  // Sync with cloud on back navigation (asynchronous, doesn't block UI transition)
                   if (onSync) {
-                    try {
-                      await onSync();
-                    } catch (syncErr) {
+                    onSync().catch(syncErr => {
                       console.error('Failed to sync on back expected budget:', syncErr);
-                    }
+                    });
                   }
                 } catch (err) {
                   console.error('Failed to auto-save expected budget on back:', err);

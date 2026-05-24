@@ -55,6 +55,7 @@ export default function DashboardView({
   const [activeModal, setActiveModal] = useState<'docs' | 'security' | 'manifest' | 'source' | null>(null);
   const { categories, isLoading: isCategoriesLoading } = useCategories();
   const [chartRange, setChartRange] = useState<'1M' | '3M' | '6M' | '1Y'>('1M');
+  const [chartMetric, setChartMetric] = useState<'spendings' | 'balance'>('spendings');
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState(activeVaultName);
 
@@ -100,7 +101,7 @@ export default function DashboardView({
   const agilePercent = (agileCents / totalBase) * 100;
   const retainedPercent = (retainedCents / totalBase) * 100;
 
-  // 3. Spend Velocity Trend (Dynamic) — timezone-aware
+  // 3. Reserves & Flow Trend (Dynamic) — timezone-aware
   const velocityData: { label: string; value: number }[] = [];
   const nowParts = getTimezoneDateParts(Date.now(), timezone);
   
@@ -111,10 +112,18 @@ export default function DashboardView({
       const dayParts = getTimezoneDateParts(dayStart, timezone);
       const monthsAbbr = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       const dateStr = `${monthsAbbr[dayParts.month - 1]} ${dayParts.day}`;
-      const dayCents = expenses
-        .filter(t => t.booking_date >= dayStart && t.booking_date < dayEnd)
-        .reduce((sum, t) => sum + t.amount, 0);
-      velocityData.push({ label: dateStr, value: dayCents / 100 });
+      
+      let val = 0;
+      if (chartMetric === 'spendings') {
+        val = expenses
+          .filter(t => t.booking_date >= dayStart && t.booking_date < dayEnd)
+          .reduce((sum, t) => sum + t.amount, 0) / 100;
+      } else {
+        const incomesBefore = incomes.filter(t => t.booking_date < dayEnd).reduce((sum, t) => sum + t.amount, 0);
+        const expensesBefore = expenses.filter(t => t.booking_date < dayEnd).reduce((sum, t) => sum + t.amount, 0);
+        val = (incomesBefore - expensesBefore) / 100;
+      }
+      velocityData.push({ label: dateStr, value: val });
     }
   } else if (chartRange === '3M' || chartRange === '6M') {
     const weeks = chartRange === '3M' ? 12 : 24;
@@ -124,10 +133,18 @@ export default function DashboardView({
       const startParts = getTimezoneDateParts(start, timezone);
       const monthsAbbr = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       const weekStr = `${monthsAbbr[startParts.month - 1]} ${startParts.day}`;
-      const weekCents = expenses
-        .filter(t => t.booking_date >= start && t.booking_date < end)
-        .reduce((sum, t) => sum + t.amount, 0);
-      velocityData.push({ label: weekStr, value: weekCents / 100 });
+      
+      let val = 0;
+      if (chartMetric === 'spendings') {
+        val = expenses
+          .filter(t => t.booking_date >= start && t.booking_date < end)
+          .reduce((sum, t) => sum + t.amount, 0) / 100;
+      } else {
+        const incomesBefore = incomes.filter(t => t.booking_date < end).reduce((sum, t) => sum + t.amount, 0);
+        const expensesBefore = expenses.filter(t => t.booking_date < end).reduce((sum, t) => sum + t.amount, 0);
+        val = (incomesBefore - expensesBefore) / 100;
+      }
+      velocityData.push({ label: weekStr, value: val });
     }
   } else if (chartRange === '1Y') {
     for (let i = 11; i >= 0; i--) {
@@ -136,10 +153,18 @@ export default function DashboardView({
       const mParts = getTimezoneDateParts(monthStart, timezone);
       const monthsAbbr = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       const monthStr = `${monthsAbbr[mParts.month - 1]} '${String(mParts.year).slice(-2)}`;
-      const monthCents = expenses
-        .filter(t => t.booking_date >= monthStart && t.booking_date < monthEnd)
-        .reduce((sum, t) => sum + t.amount, 0);
-      velocityData.push({ label: monthStr, value: monthCents / 100 });
+      
+      let val = 0;
+      if (chartMetric === 'spendings') {
+        val = expenses
+          .filter(t => t.booking_date >= monthStart && t.booking_date < monthEnd)
+          .reduce((sum, t) => sum + t.amount, 0) / 100;
+      } else {
+        const incomesBefore = incomes.filter(t => t.booking_date < monthEnd).reduce((sum, t) => sum + t.amount, 0);
+        const expensesBefore = expenses.filter(t => t.booking_date < monthEnd).reduce((sum, t) => sum + t.amount, 0);
+        val = (incomesBefore - expensesBefore) / 100;
+      }
+      velocityData.push({ label: monthStr, value: val });
     }
   }
 
@@ -444,8 +469,34 @@ export default function DashboardView({
 
         {/* Middle Section: Flow Graph */}
         <section className="w-full max-w-3xl mx-auto space-y-4">
-           <div className="flex items-center justify-between px-2">
-             <h3 className="text-[11px] font-bold text-on-surface-variant tracking-[0.2em] uppercase">Flow Velocity</h3>
+           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-2">
+             <div className="flex items-center gap-3">
+               <h3 className="text-[11px] font-bold text-on-surface-variant tracking-[0.2em] uppercase">Reserves & Flow</h3>
+               <div className="flex bg-white/5 p-0.5 rounded-full border border-white/5">
+                 <button
+                   onClick={() => setChartMetric('spendings')}
+                   className={cn(
+                     "px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all",
+                     chartMetric === 'spendings'
+                       ? "bg-ocean-blue text-surface-dark shadow-[0_2px_10px_rgba(92,124,138,0.3)]"
+                       : "text-on-surface-variant hover:text-on-surface"
+                   )}
+                 >
+                   Spendings
+                 </button>
+                 <button
+                   onClick={() => setChartMetric('balance')}
+                   className={cn(
+                     "px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all",
+                     chartMetric === 'balance'
+                       ? "bg-nature-green text-surface-dark shadow-[0_2px_10px_rgba(123,160,91,0.3)]"
+                       : "text-on-surface-variant hover:text-on-surface"
+                   )}
+                 >
+                   Balance
+                 </button>
+               </div>
+             </div>
              <div className="flex gap-2">
                {(['1M', '3M', '6M', '1Y'] as const).map(range => (
                  <button 
@@ -468,20 +519,20 @@ export default function DashboardView({
                 <AreaChart data={velocityData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--color-ocean-blue)" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="var(--color-ocean-blue)" stopOpacity={0}/>
+                      <stop offset="5%" stopColor={chartMetric === 'spendings' ? 'var(--color-ocean-blue)' : 'var(--color-nature-green)'} stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor={chartMetric === 'spendings' ? 'var(--color-ocean-blue)' : 'var(--color-nature-green)'} stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <Tooltip 
                     contentStyle={{ backgroundColor: 'var(--surface-container)', border: 'none', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}
                     itemStyle={{ color: 'var(--on-surface)' }}
-                    formatter={(value: number) => [`${currency}${value.toFixed(2)}`, 'Spent']}
+                    formatter={(value: number) => [`${currency}${value.toFixed(2)}`, chartMetric === 'spendings' ? 'Spent' : 'Balance']}
                     labelStyle={{ color: 'var(--on-surface-variant)', marginBottom: '4px', fontSize: '12px' }}
                   />
                   <Area 
                     type="monotone" 
                     dataKey="value" 
-                    stroke="var(--color-ocean-blue)" 
+                    stroke={chartMetric === 'spendings' ? 'var(--color-ocean-blue)' : 'var(--color-nature-green)'} 
                     strokeWidth={3}
                     fillOpacity={1} 
                     fill="url(#colorValue)" 
