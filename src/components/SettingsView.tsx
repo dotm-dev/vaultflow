@@ -1,11 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, RefreshCw, CheckCircle, Download, Trash2, Shield, Moon, Sun, Coins, Hash, Calendar, Cloud, Database, User, Lock, Eye, EyeOff, AlertCircle, X, ArrowRight, Sparkles, Settings, Clock, Globe } from 'lucide-react';
+import { ArrowLeft, RefreshCw, CheckCircle, Download, Trash2, Trash, Shield, Moon, Sun, Coins, Hash, Calendar, Cloud, Database, User, Lock, Eye, EyeOff, AlertCircle, X, ArrowRight, Sparkles, Settings, Clock, Globe, Repeat, Edit, AlertTriangle } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { getConfig, saveConfig } from '../lib/db';
 import { signInWithGoogle, signOutGoogle, getCloudManifest, isGoogleConnected, GoogleUser, VaultProfile, deleteCloudVault } from '../lib/googleDriveSync';
 import { hashPasswordForChallenge, hexToBytes } from '../lib/crypto';
-import { formatDate, formatTime } from '../lib/formatters';
+import { formatDate, formatTime, formatAmount } from '../lib/formatters';
+import { Transaction } from '../types';
+import { calculateNextOccurrence } from '../App';
+import { useCategories, ICON_MAP } from '../lib/categories';
 
 interface SettingsViewProps {
   onBack: () => void;
@@ -44,6 +47,10 @@ interface SettingsViewProps {
   keepCloudVaultLocal: boolean;
   connectedGoogleUser: GoogleUser | null;
   activeVaultName: string;
+  transactions: Transaction[];
+  onUpdateTransaction: (tx: Transaction) => Promise<void>;
+  onDeleteTransactions: (txIds: string[]) => Promise<void>;
+  addToast: (message: string, type?: 'success' | 'info' | 'warning' | 'error') => void;
 }
 
 export default function SettingsView({ 
@@ -73,15 +80,108 @@ export default function SettingsView({
   lastSyncSuccess,
   keepCloudVaultLocal,
   connectedGoogleUser,
-  activeVaultName
+  activeVaultName,
+  transactions,
+  onUpdateTransaction,
+  onDeleteTransactions,
+  addToast
 }: SettingsViewProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'preferences' | 'backup' | 'security'>('preferences');
+  const [activeTab, setActiveTab] = useState<'preferences' | 'backup' | 'security' | 'recurring'>('preferences');
 
   // Cloud vault management state
   const [cloudVaults, setCloudVaults] = useState<VaultProfile[]>([]);
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [showSwitchModal, setShowSwitchModal] = useState(false);
+
+  // Recurring management states and operations
+  const { categories } = useCategories();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editAmount, setEditAmount] = useState('');
+  const [editCategory, setEditCategory] = useState('food');
+  const [editCounterparty, setEditCounterparty] = useState('');
+  const [editInterval, setEditInterval] = useState(1);
+  const [editUnit, setEditUnit] = useState<'days' | 'weeks' | 'months' | 'years'>('months');
+  
+  const [deleteChoiceId, setDeleteChoiceId] = useState<string | null>(null);
+  const [isDeletingLoading, setIsDeletingLoading] = useState(false);
+
+  const handleStartEdit = (tx: Transaction) => {
+    setEditingId(tx.id);
+    setEditAmount((tx.amount / 100).toString());
+    setEditCategory(tx.category_id || 'food');
+    setEditCounterparty(tx.counterparty);
+    setEditInterval(tx.recurrence?.interval || 1);
+    setEditUnit(tx.recurrence?.unit || 'months');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingId) return;
+    const parent = transactions.find(t => t.id === editingId);
+    if (!parent) return;
+    
+    const parsedAmount = parseFloat(editAmount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      alert('Please specify a valid amount.');
+      return;
+    }
+    
+    const updatedParent: Transaction = {
+      ...parent,
+      amount: Math.round(parsedAmount * 100),
+      category_id: parent.type === 'expense' ? editCategory : null,
+      counterparty: editCounterparty.trim() || parent.counterparty,
+      recurrence: {
+        ...parent.recurrence!,
+        interval: editInterval,
+        unit: editUnit
+      }
+    };
+    
+    try {
+      await onUpdateTransaction(updatedParent);
+      addToast('Schedule updated successfully', 'success');
+      setEditingId(null);
+    } catch (e) {
+      console.error(e);
+      addToast('Failed to update schedule', 'error');
+    }
+  };
+
+  const handleCancelRecurrence = async (id: string) => {
+    const parent = transactions.find(t => t.id === id);
+    if (!parent) return;
+    
+    // Create copy without recurrence
+    const updatedParent: Transaction = { ...parent };
+    delete updatedParent.recurrence;
+    
+    try {
+      await onUpdateTransaction(updatedParent);
+      addToast('Recurrence canceled. History preserved.', 'success');
+      setDeleteChoiceId(null);
+    } catch (e) {
+      console.error(e);
+      addToast('Failed to cancel recurrence', 'error');
+    }
+  };
+
+  const handleDeleteAllOccurrences = async (id: string) => {
+    setIsDeletingLoading(true);
+    try {
+      const parent = transactions.find(t => t.id === id);
+      if (!parent) return;
+      
+      const childIds = transactions.filter(t => t.recurrence_parent_id === id).map(t => t.id);
+      await onDeleteTransactions([id, ...childIds]);
+      setDeleteChoiceId(null);
+    } catch (e) {
+      console.error(e);
+      addToast('Failed to delete occurrences', 'error');
+    } finally {
+      setIsDeletingLoading(false);
+    }
+  };
   const [selectedSwitchVault, setSelectedSwitchVault] = useState<VaultProfile | null>(null);
   const [switchPassword, setSwitchPassword] = useState('');
   const [showSwitchPassword, setShowSwitchPassword] = useState(false);
@@ -370,13 +470,12 @@ export default function SettingsView({
       </header>
 
       <main className="flex-grow flex flex-col items-center px-6 max-w-3xl mx-auto w-full py-8 z-10 gap-8">
-        
-        {/* Horizontal Tab Switcher */}
+             {/* Horizontal Tab Switcher */}
         <div className="w-full bg-surface-container/60 backdrop-blur-md rounded-2xl p-1 flex gap-1 border border-on-surface/10 dark:border-white/5 shadow-sm">
           <button
             onClick={() => setActiveTab('preferences')}
             className={cn(
-              "relative flex-1 py-3 rounded-xl text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer z-10",
+              "relative flex-1 py-3 rounded-xl text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer z-10",
               activeTab === 'preferences'
                 ? "text-nature-green font-extrabold"
                 : "text-on-surface-variant hover:text-on-surface"
@@ -389,13 +488,13 @@ export default function SettingsView({
                 transition={{ type: "spring", stiffness: 380, damping: 30 }}
               />
             )}
-            <Settings className="w-4 h-4" />
-            Preferences
+            <Settings className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Preferences</span>
           </button>
           <button
             onClick={() => setActiveTab('backup')}
             className={cn(
-              "relative flex-1 py-3 rounded-xl text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer z-10",
+              "relative flex-1 py-3 rounded-xl text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer z-10",
               activeTab === 'backup'
                 ? "text-nature-green font-extrabold"
                 : "text-on-surface-variant hover:text-on-surface"
@@ -408,13 +507,32 @@ export default function SettingsView({
                 transition={{ type: "spring", stiffness: 380, damping: 30 }}
               />
             )}
-            <Cloud className="w-4 h-4" />
-            Cloud Backup
+            <Cloud className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Cloud Backup</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('recurring')}
+            className={cn(
+              "relative flex-1 py-3 rounded-xl text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer z-10",
+              activeTab === 'recurring'
+                ? "text-nature-green font-extrabold"
+                : "text-on-surface-variant hover:text-on-surface"
+            )}
+          >
+            {activeTab === 'recurring' && (
+              <motion.div
+                layoutId="active-settings-tab"
+                className="absolute inset-0 bg-surface-dark shadow-md border border-on-surface/5 dark:border-white/5 rounded-xl -z-10"
+                transition={{ type: "spring", stiffness: 380, damping: 30 }}
+              />
+            )}
+            <Repeat className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Recurring</span>
           </button>
           <button
             onClick={() => setActiveTab('security')}
             className={cn(
-              "relative flex-1 py-3 rounded-xl text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer z-10",
+              "relative flex-1 py-3 rounded-xl text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer z-10",
               activeTab === 'security'
                 ? "text-nature-green font-extrabold"
                 : "text-on-surface-variant hover:text-on-surface"
@@ -427,8 +545,8 @@ export default function SettingsView({
                 transition={{ type: "spring", stiffness: 380, damping: 30 }}
               />
             )}
-            <Shield className="w-4 h-4" />
-            Data & Security
+            <Shield className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Security</span>
           </button>
         </div>
 
@@ -1064,6 +1182,214 @@ export default function SettingsView({
             </motion.div>
           )}
 
+          {/* TAB 4: RECURRING SCHEDULES */}
+          {activeTab === 'recurring' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6 w-full animate-fade-in"
+            >
+              <div className="glass-card rounded-[2rem] p-6 relative overflow-hidden flex flex-col gap-6">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-nature-green/5 dark:bg-nature-green/10 blur-[50px] rounded-full pointer-events-none" />
+                
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-nature-green/10 flex items-center justify-center">
+                    <Repeat className="w-5 h-5 text-nature-green" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-on-surface">Recurring Schedules</h3>
+                    <p className="text-xs text-on-surface-variant mt-0.5">
+                      Configure and manage recurring expenses or incomes currently registered in your vault.
+                    </p>
+                  </div>
+                </div>
+
+                {(() => {
+                  const schedules = transactions.filter(t => t.recurrence && !t.recurrence_parent_id);
+                  if (schedules.length === 0) {
+                    return (
+                      <div className="text-center py-12 text-on-surface-variant text-sm border border-white/5 border-dashed rounded-3xl font-mono uppercase tracking-wider">
+                        No active recurring schedules found.
+                      </div>
+                    );
+                  }
+                  
+                  return (
+                    <div className="space-y-4">
+                      {schedules.map(schedule => {
+                        const isEditing = editingId === schedule.id;
+                        const cat = categories.find(c => c.id === schedule.category_id);
+                        const IconComponent = cat ? ICON_MAP[cat.icon] : Repeat;
+                        const iconColor = cat ? cat.color : 'text-nature-green';
+                        const bgColor = cat ? cat.color.replace('text-', 'bg-').concat('/10') : 'bg-nature-green/10';
+                        
+                        const lastRun = schedule.recurrence?.last_processed_date;
+                        const nextRun = calculateNextOccurrence(
+                          lastRun || schedule.booking_date,
+                          schedule.recurrence?.interval || 1,
+                          schedule.recurrence?.unit || 'months',
+                          timezone
+                        );
+                        
+                        return (
+                          <div
+                            key={schedule.id}
+                            className={cn(
+                              "border rounded-2xl p-5 transition-all flex flex-col gap-4",
+                              isEditing
+                                ? "border-nature-green/30 bg-nature-green/[0.02]"
+                                : "border-on-surface/10 dark:border-white/5 bg-on-surface/[0.01] dark:bg-white/[0.01]"
+                            )}
+                          >
+                            {/* Schedule Header / Detail display */}
+                            {!isEditing ? (
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="flex items-center gap-4.5">
+                                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", bgColor)}>
+                                    <IconComponent className={cn("w-5 h-5", iconColor)} />
+                                  </div>
+                                  <div>
+                                    <div className="font-bold text-sm text-on-surface">{schedule.counterparty}</div>
+                                    <div className="text-[10px] text-on-surface-variant font-mono mt-1 uppercase tracking-wider flex items-center gap-2 flex-wrap">
+                                      <span>{cat ? cat.label : 'Income'}</span>
+                                      <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
+                                      <span className="text-nature-green font-bold">Every {schedule.recurrence?.interval} {schedule.recurrence?.unit}</span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="flex sm:flex-col items-baseline sm:items-end justify-between sm:justify-center gap-2 shrink-0">
+                                  <div className="text-sm font-bold font-mono text-on-surface">
+                                    {formatAmount(schedule.amount, currency, thousandsSeparator, true)}
+                                  </div>
+                                  <div className="text-[9px] text-on-surface-variant font-mono">
+                                    Next: {formatDate(nextRun, dateFormat, timezone)}
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              /* Inline Editing Mode */
+                              <div className="flex flex-col gap-4.5">
+                                <div className="text-xs font-mono font-bold uppercase tracking-wider text-nature-green">Edit Schedule Details</div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                  {/* Counterparty Name */}
+                                  <div className="space-y-1.5">
+                                    <label className="text-[9px] uppercase font-bold text-on-surface-variant tracking-wider font-mono">Merchant / Counterparty</label>
+                                    <input
+                                      type="text"
+                                      value={editCounterparty}
+                                      onChange={(e) => setEditCounterparty(e.target.value)}
+                                      className="w-full bg-surface-dark border border-white/10 rounded-xl px-3 py-2 font-mono text-xs text-on-surface focus:outline-none focus:border-nature-green/50"
+                                    />
+                                  </div>
+
+                                  {/* Amount */}
+                                  <div className="space-y-1.5">
+                                    <label className="text-[9px] uppercase font-bold text-on-surface-variant tracking-wider font-mono">Amount ({currency})</label>
+                                    <input
+                                      type="number"
+                                      step="0.01"
+                                      value={editAmount}
+                                      onChange={(e) => setEditAmount(e.target.value)}
+                                      className="w-full bg-surface-dark border border-white/10 rounded-xl px-3 py-2 font-mono text-xs text-on-surface focus:outline-none focus:border-nature-green/50"
+                                    />
+                                  </div>
+
+                                  {/* Category (only for expense) */}
+                                  {schedule.type === 'expense' && (
+                                    <div className="space-y-1.5 col-span-1">
+                                      <label className="text-[9px] uppercase font-bold text-on-surface-variant tracking-wider font-mono">Category</label>
+                                      <select
+                                        value={editCategory}
+                                        onChange={(e) => setEditCategory(e.target.value)}
+                                        className="w-full bg-surface-dark border border-white/10 rounded-xl px-3 py-2 font-mono text-xs text-on-surface focus:outline-none focus:border-nature-green/50 cursor-pointer"
+                                      >
+                                        {categories.filter(c => c.id !== 'income').map(c => (
+                                          <option key={c.id} className="bg-surface-dark text-on-surface" value={c.id}>{c.label}</option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  )}
+
+                                  {/* Recurrence Frequency */}
+                                  <div className="space-y-1.5 flex gap-2 sm:col-span-2 md:col-span-3 items-end">
+                                    <div className="flex-1 space-y-1.5">
+                                      <label className="text-[9px] uppercase font-bold text-on-surface-variant tracking-wider font-mono">Repeat Interval</label>
+                                      <input
+                                        type="number"
+                                        min="1"
+                                        value={editInterval}
+                                        onChange={(e) => setEditInterval(Math.max(1, parseInt(e.target.value) || 1))}
+                                        className="w-full bg-surface-dark border border-white/10 rounded-xl px-3 py-2 font-mono text-xs text-on-surface focus:outline-none focus:border-nature-green/50"
+                                      />
+                                    </div>
+                                    <div className="flex-1 space-y-1.5">
+                                      <label className="text-[9px] uppercase font-bold text-on-surface-variant tracking-wider font-mono">Frequency Unit</label>
+                                      <select
+                                        value={editUnit}
+                                        onChange={(e) => setEditUnit(e.target.value as any)}
+                                        className="w-full bg-surface-dark border border-white/10 rounded-xl px-3 py-2 font-mono text-xs text-on-surface focus:outline-none focus:border-nature-green/50 cursor-pointer"
+                                      >
+                                        <option value="days">Day(s)</option>
+                                        <option value="weeks">Week(s)</option>
+                                        <option value="months">Month(s)</option>
+                                        <option value="years">Year(s)</option>
+                                      </select>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Actions Buttons */}
+                            <div className="flex justify-end gap-2.5 border-t border-on-surface/5 pt-3.5">
+                              {!isEditing ? (
+                                <>
+                                  <button
+                                    onClick={() => handleStartEdit(schedule)}
+                                    className="px-3.5 py-1.5 rounded-lg border border-on-surface/10 hover:border-nature-green/30 text-on-surface-variant hover:text-nature-green text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer bg-white/[0.01]"
+                                    title="Edit schedule configuration"
+                                  >
+                                    <Edit className="w-3.5 h-3.5" />
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() => setDeleteChoiceId(schedule.id)}
+                                    className="px-3.5 py-1.5 rounded-lg border border-earth-clay/20 hover:bg-earth-clay/10 text-earth-clay text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer"
+                                    title="Delete schedule or occurrences"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    Cancel
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() => setEditingId(null)}
+                                    className="px-4 py-1.5 rounded-lg border border-on-surface/10 hover:bg-white/5 text-on-surface text-[10px] font-mono font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    onClick={handleSaveEdit}
+                                    className="px-4 py-1.5 rounded-lg bg-nature-green text-surface-dark text-[10px] font-mono font-bold uppercase tracking-wider hover:scale-102 active:scale-98 transition-all cursor-pointer"
+                                  >
+                                    Save changes
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </div>
+            </motion.div>
+          )}
+
         </div>
 
       </main>
@@ -1398,6 +1724,97 @@ export default function SettingsView({
             </motion.div>
           </motion.div>
         )}
+      </AnimatePresence>
+
+      {/* ─── Cancel Recurrence Modal ──────────────────────────────────────── */}
+      <AnimatePresence>
+        {deleteChoiceId && (() => {
+          const schedule = transactions.find(t => t.id === deleteChoiceId);
+          if (!schedule) return null;
+          
+          return (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-surface-dark/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              onClick={() => !isDeletingLoading && setDeleteChoiceId(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+                className="glass-card rounded-3xl w-full max-w-md overflow-hidden relative shadow-2xl"
+              >
+                <div className="flex items-center justify-between p-6 border-b border-on-surface/10 dark:border-white/5">
+                  <div>
+                    <h2 className="text-lg font-bold text-on-surface">Cancel Recurring Schedule</h2>
+                    <p className="text-xs text-on-surface-variant mt-1 font-mono">{schedule.counterparty}</p>
+                  </div>
+                  <button
+                    onClick={() => setDeleteChoiceId(null)}
+                    disabled={isDeletingLoading}
+                    className="p-2 rounded-full hover:bg-white/5 text-on-surface-variant transition-colors disabled:opacity-50"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="p-6 space-y-5">
+                  <div className="bg-earth-clay/10 border border-earth-clay/20 rounded-2xl p-4 space-y-2 text-left">
+                    <div className="flex items-center gap-2 text-earth-clay text-xs font-bold font-mono uppercase tracking-wider">
+                      <AlertTriangle className="w-4.5 h-4.5 shrink-0" />
+                      Choose Deletion Method
+                    </div>
+                    <p className="text-xs leading-relaxed text-on-surface-variant">
+                      How would you like to cancel this subscription or salary schedule?
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col gap-3">
+                    {/* Option 1: Stop Recurrence */}
+                    <button
+                      onClick={() => handleCancelRecurrence(schedule.id)}
+                      disabled={isDeletingLoading}
+                      className="w-full text-left p-4.5 rounded-2xl border border-on-surface/10 dark:border-white/5 bg-on-surface/[0.01] dark:bg-white/[0.01] hover:border-nature-green/40 hover:bg-nature-green/[0.02] transition-all cursor-pointer group disabled:opacity-50"
+                    >
+                      <div className="font-bold text-xs text-on-surface group-hover:text-nature-green transition-colors">
+                        Stop Recurrence (Keep History)
+                      </div>
+                      <div className="text-[10px] text-on-surface-variant mt-1 leading-relaxed">
+                        Removes the schedule tags. All past generated occurrences (charges/inflows) will remain in your database history.
+                      </div>
+                    </button>
+
+                    {/* Option 2: Delete All Occurrences */}
+                    <button
+                      onClick={() => handleDeleteAllOccurrences(schedule.id)}
+                      disabled={isDeletingLoading}
+                      className="w-full text-left p-4.5 rounded-2xl border border-on-surface/10 dark:border-white/5 bg-on-surface/[0.01] dark:bg-white/[0.01] hover:border-earth-clay/40 hover:bg-earth-clay/[0.02] transition-all cursor-pointer group disabled:opacity-50"
+                    >
+                      <div className="font-bold text-xs text-on-surface group-hover:text-earth-clay transition-colors flex items-center gap-1.5">
+                        {isDeletingLoading && <RefreshCw className="w-3.5 h-3.5 animate-spin shrink-0" />}
+                        Delete All Occurrences (Wipe Series)
+                      </div>
+                      <div className="text-[10px] text-on-surface-variant mt-1 leading-relaxed">
+                        Permanently deletes the original template transaction and all of its generated instances from your database.
+                      </div>
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => setDeleteChoiceId(null)}
+                    disabled={isDeletingLoading}
+                    className="w-full h-11 rounded-xl border border-on-surface/10 dark:border-white/10 bg-on-surface/5 dark:bg-white/5 text-on-surface text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
+                  >
+                    Close
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          );
+        })()}
       </AnimatePresence>
     </div>
   );

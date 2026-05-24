@@ -24,7 +24,9 @@ interface UnlockViewProps {
     backupEnabled?: boolean,
     keepLocal?: boolean,
     timezone?: string,
-    language?: string
+    language?: string,
+    creationBalance?: string,
+    ledgerCreatedAt?: number
   ) => void;
   onBack: () => void;
   onStartWizard: () => void;
@@ -362,6 +364,14 @@ export default function UnlockView({
       await saveConfig('backup_enabled', backupEnabled !== undefined ? backupEnabled : true);
       await saveConfig('keep_cloud_vault_local', keepLocal !== undefined ? keepLocal : false);
 
+      const fixedCatsVal = selectedVault.config?.fixed_categories || JSON.stringify(['home', 'utilities', 'health']);
+      await saveConfig('fixed_categories', fixedCatsVal);
+
+      const creationBalanceVal = selectedVault.config?.creation_balance || '0';
+      const ledgerCreatedAtVal = selectedVault.config?.ledger_created_at || Date.now();
+      await saveConfig('creation_balance', creationBalanceVal);
+      await saveConfig('ledger_created_at', ledgerCreatedAtVal);
+
       setRestoreProgress(100);
       setRestoreMessage('Complete!');
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -380,7 +390,9 @@ export default function UnlockView({
         backupEnabled !== undefined ? backupEnabled : true,
         keepLocal !== undefined ? keepLocal : false,
         timezoneVal,
-        languageVal
+        languageVal,
+        creationBalanceVal,
+        ledgerCreatedAtVal
       );
     } catch (err: any) {
       console.error('Failed to restore ledger vault:', err);

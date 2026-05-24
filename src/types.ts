@@ -1,4 +1,4 @@
-export type AppView = 'landing' | 'wizard' | 'empty-dashboard' | 'dashboard' | 'unlock' | 'settings' | 'budget' | 'category-details' | 'expected-budget';
+export type AppView = 'landing' | 'wizard' | 'empty-dashboard' | 'dashboard' | 'unlock' | 'settings' | 'budget' | 'category-details' | 'expected-budget' | 'reserves-flow' | 'reserves-map';
 
 export interface Transaction {
   id: string;
@@ -12,7 +12,10 @@ export interface Transaction {
   recurrence?: {
     interval: number;
     unit: 'days' | 'weeks' | 'months' | 'years';
+    last_processed_date?: number;
   };
+  recurrence_parent_id?: string;
+  recurrence_instance_date?: number;
 }
 
 export interface Category {
@@ -31,3 +34,17 @@ export interface AppState {
   isImportModalOpen: boolean;
   activeCategory?: string;
 }
+
+export interface CSVMappingProfile {
+  id: string;
+  name: string;
+  headers: string[]; // List of all headers in the CSV to match against
+  delimiter: string;
+  dateHeader: string;
+  counterpartyHeader: string;
+  amountType: 'single' | 'split'; // Single column (+/-) or separate credit/debit columns
+  amountHeader?: string; // For single column layout
+  creditHeader?: string; // For split column layout
+  debitHeader?: string;  // For split column layout
+}
+

@@ -1,12 +1,12 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { Lock, Shield, ArrowLeft, ArrowRight, Eye, EyeOff, CheckCircle, RefreshCw, CloudUpload, Sparkles, X, AlertCircle, Coins, Globe, Hash, Calendar } from 'lucide-react';
+import { Lock, Shield, ArrowLeft, ArrowRight, Eye, EyeOff, CheckCircle, RefreshCw, CloudUpload, Sparkles, X, AlertCircle, Coins, Globe, Hash, Calendar, Info, Settings, Trash2 } from 'lucide-react';
 import React, { useState, useRef } from 'react';
 import { cn } from '@/src/lib/utils';
 import { deriveEncryptionKey, hashPasswordForChallenge, encryptPayload, decryptPayload, generateSalt, bytesToHex, hexToBytes } from '../lib/crypto';
 import { saveConfig, getConfig, saveEncryptedTransaction, clearAllLocalData } from '../lib/db';
 import { signInWithGoogle, signOutGoogle, getCloudManifest, saveCloudManifest, getCloudVaultData, saveCloudVaultData, VaultProfile, GoogleUser, isGoogleConnected, getConnectedGoogleUser } from '../lib/googleDriveSync';
-import { parseCSVStatement } from '../lib/csv';
-import { Transaction } from '../types';
+import { parseCSVStatement, parseCSVPreview, parseCSVWithProfile } from '../lib/csv';
+import { Transaction, CSVMappingProfile } from '../types';
 
 interface WizardViewProps {
   onComplete: (key: CryptoKey, txs: Transaction[]) => void;
@@ -92,6 +92,139 @@ export default function WizardView({ onComplete, onCancel }: WizardViewProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
 
+  // Custom CSV Mapping states
+  const [customProfiles, setCustomProfiles] = useState<CSVMappingProfile[]>([]);
+  const [rawFileContent, setRawFileContent] = useState('');
+  const [mappingMode, setMappingMode] = useState(false);
+  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+  const [csvPreviewRows, setCsvPreviewRows] = useState<string[][]>([]);
+  const [csvDelimiter, setCsvDelimiter] = useState(',');
+  
+  // Mapping selectors
+  const [dateHeader, setDateHeader] = useState('');
+  const [descHeader, setDescHeader] = useState('');
+  const [amountType, setAmountType] = useState<'single' | 'split'>('single');
+  const [amountHeader, setAmountHeader] = useState('');
+  const [debitHeader, setDebitHeader] = useState('');
+  const [creditHeader, setCreditHeader] = useState('');
+  
+  const [shouldSaveProfile, setShouldSaveProfile] = useState(false);
+  const [profileNameInput, setProfileNameInput] = useState('');
+  const [detectedProfile, setDetectedProfile] = useState<CSVMappingProfile | null>(null);
+
+  // Load custom mapping profiles on mount
+  React.useEffect(() => {
+    const loadProfiles = async () => {
+      try {
+        const stored = await getConfig('csv_mapping_profiles');
+        if (stored) {
+          setCustomProfiles(stored);
+        }
+      } catch (e) {
+        console.error('Failed to load mapping profiles:', e);
+      }
+    };
+    loadProfiles();
+  }, [step]);
+
+  // Guess columns based on typical bank header keywords
+  const guessHeaders = (headers: string[]) => {
+    const lowercaseHeaders = headers.map(h => h.toLowerCase());
+    
+    // Guess Date
+    const dateIdx = lowercaseHeaders.findIndex(h => h.includes('date') || h.includes('data') || h.includes('giorno') || h.includes('datum'));
+    if (dateIdx !== -1) setDateHeader(headers[dateIdx]);
+    else if (headers.length > 0) setDateHeader(headers[0]);
+    
+    // Guess Counterparty / Description
+    const descIdx = lowercaseHeaders.findIndex(h => h.includes('desc') || h.includes('merchant') || h.includes('counterparty') || h.includes('payee') || h.includes('causale') || h.includes('subject') || h.includes('dettagli') || h.includes('beneficiary') || h.includes('notification'));
+    if (descIdx !== -1) setDescHeader(headers[descIdx]);
+    else if (headers.length > 1) setDescHeader(headers[1]);
+    
+    // Guess Amount Type (Single vs Split Debit/Credit)
+    const debitIdx = lowercaseHeaders.findIndex(h => h.includes('debit') || h.includes('addebito') || h.includes('soll') || h.includes('uscita') || (h.includes('debit') && h.includes('chf')));
+    const creditIdx = lowercaseHeaders.findIndex(h => h.includes('credit') || h.includes('accredito') || h.includes('haben') || h.includes('entrata') || (h.includes('credit') && h.includes('chf')));
+    
+    if (debitIdx !== -1 && creditIdx !== -1) {
+      setAmountType('split');
+      setDebitHeader(headers[debitIdx]);
+      setCreditHeader(headers[creditIdx]);
+    } else {
+      setAmountType('single');
+      const amountIdx = lowercaseHeaders.findIndex(h => h.includes('amount') || h.includes('importo') || h.includes('value') || h.includes('valore') || h.includes('betrag') || h.includes('sum') || h.includes('totale'));
+      if (amountIdx !== -1) setAmountHeader(headers[amountIdx]);
+      else if (headers.length > 2) setAmountHeader(headers[2]);
+    }
+  };
+
+  // Apply custom mapping profile
+  const handleApplyMapping = async () => {
+    if (!dateHeader || !descHeader) {
+      alert('Please select both the Date and Merchant columns.');
+      return;
+    }
+    if (amountType === 'single' && !amountHeader) {
+      alert('Please select the Amount column.');
+      return;
+    }
+    if (amountType === 'split' && (!debitHeader || !creditHeader)) {
+      alert('Please select both the Debit and Credit columns.');
+      return;
+    }
+
+    const profile: CSVMappingProfile = {
+      id: crypto.randomUUID(),
+      name: profileNameInput.trim() || `Profile (${fileName})`,
+      headers: csvHeaders,
+      delimiter: csvDelimiter,
+      dateHeader,
+      counterpartyHeader: descHeader,
+      amountType,
+      amountHeader: amountType === 'single' ? amountHeader : undefined,
+      debitHeader: amountType === 'split' ? debitHeader : undefined,
+      creditHeader: amountType === 'split' ? creditHeader : undefined,
+    };
+
+    if (shouldSaveProfile) {
+      try {
+        const updated = [...customProfiles, profile];
+        await saveConfig('csv_mapping_profiles', updated);
+        setCustomProfiles(updated);
+      } catch (err) {
+        console.error('Failed to save CSV profile:', err);
+      }
+    }
+
+    try {
+      const txs = parseCSVWithProfile(rawFileContent, profile);
+      setParsedTxs(txs);
+      setImportStatus('success');
+      setMappingMode(false);
+    } catch (err) {
+      console.error('Failed to parse CSV with profile:', err);
+      setImportStatus('error');
+      setFileName('Failed to parse file with custom mapping.');
+      setMappingMode(false);
+    }
+  };
+
+  // Delete saved mapping profile
+  const handleDeleteProfile = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm('Delete this saved bank format layout?')) return;
+    try {
+      const updated = customProfiles.filter(p => p.id !== id);
+      await saveConfig('csv_mapping_profiles', updated);
+      setCustomProfiles(updated);
+      if (detectedProfile?.id === id) {
+        setDetectedProfile(null);
+        setMappingMode(true);
+      }
+    } catch (err) {
+      console.error('Failed to delete mapping profile:', err);
+    }
+  };
+
   // Step 5: AI Insights State
   const [aiConsent, setAiConsent] = useState(true);
   const [isFinishing, setIsFinishing] = useState(false);
@@ -143,13 +276,53 @@ export default function WizardView({ onComplete, onCancel }: WizardViewProps) {
     }
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         const text = event.target?.result as string;
-        const txs = parseCSVStatement(text);
-        setParsedTxs(txs);
+        setRawFileContent(text);
         setFileName(file.name);
-        setImportStatus('success');
+        
+        // 1. Check standard PostFinance
+        const isPostFinance = text.includes('Date from:;=') || text.includes('Credit in CHF;Debit in CHF');
+        if (isPostFinance) {
+          const txs = parseCSVStatement(text);
+          setParsedTxs(txs);
+          setImportStatus('success');
+          return;
+        }
+
+        // 2. Unrecognized. Load preview.
+        const { headers, previewRows, delimiter } = parseCSVPreview(text);
+        setCsvHeaders(headers);
+        setCsvPreviewRows(previewRows);
+        setCsvDelimiter(delimiter);
+
+        if (headers.length === 0) {
+          setImportStatus('error');
+          setFileName('The CSV file appears to be empty or malformed.');
+          return;
+        }
+
+        // 3. Find matching profile
+        const matchingProfile = customProfiles.find(p => {
+          const hasDate = headers.map(h => h.toLowerCase()).includes(p.dateHeader.toLowerCase());
+          const hasDesc = headers.map(h => h.toLowerCase()).includes(p.counterpartyHeader.toLowerCase());
+          const hasAmount = p.amountType === 'single'
+            ? headers.map(h => h.toLowerCase()).includes((p.amountHeader || '').toLowerCase())
+            : headers.map(h => h.toLowerCase()).includes((p.debitHeader || '').toLowerCase()) &&
+              headers.map(h => h.toLowerCase()).includes((p.creditHeader || '').toLowerCase());
+          return hasDate && hasDesc && hasAmount;
+        });
+
+        if (matchingProfile) {
+          setDetectedProfile(matchingProfile);
+          const txs = parseCSVWithProfile(text, matchingProfile);
+          setParsedTxs(txs);
+          setImportStatus('success');
+        } else {
+          setMappingMode(true);
+          guessHeaders(headers);
+        }
       } catch (err) {
         console.error('CSV Parsing Error:', err);
         setImportStatus('error');
@@ -759,90 +932,347 @@ export default function WizardView({ onComplete, onCancel }: WizardViewProps) {
                     />
                   ))}
                 </div>
-                <button onClick={onCancel} className="text-on-surface-variant hover:text-on-surface transition-colors">
+                <button onClick={() => { setMappingMode(false); onCancel(); }} className="text-on-surface-variant hover:text-on-surface transition-colors">
                   <X className="w-6 h-6" />
                 </button>
               </div>
               <div className="text-center space-y-2 mt-2">
-                <h1 className="text-2xl md:text-3xl font-bold text-nature-green tracking-tight">Data Import</h1>
-                <p className="font-mono text-xs text-on-surface-variant uppercase tracking-widest font-bold">Step 4 of 5</p>
+                <h1 className="text-2xl md:text-3xl font-bold text-nature-green tracking-tight">
+                  {mappingMode ? 'Map CSV Columns' : 'Data Import'}
+                </h1>
+                <p className="font-mono text-xs text-on-surface-variant uppercase tracking-widest font-bold">
+                  {mappingMode ? 'Align fields with sample rows' : 'Step 4 of 5'}
+                </p>
               </div>
             </header>
 
-            <section className="flex flex-col items-center justify-center gap-6 py-2 px-2">
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleFileChange} 
-                accept=".csv, text/csv, application/csv, text/comma-separated-values, application/vnd.ms-excel" 
-                className="hidden" 
-              />
-              
-              <div 
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInputRef.current?.click(); } }}
-                onDragEnter={handleDrag}
-                onDragOver={handleDrag}
-                onDragLeave={handleDrag}
-                onDrop={handleFileDrop}
-                onClick={() => fileInputRef.current?.click()}
-                className={cn(
-                  "w-full h-56 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center gap-4 cursor-pointer transition-all group px-4 text-center",
-                  dragActive ? "border-nature-green bg-nature-green/10" : "border-white/10 hover:border-nature-green hover:bg-nature-green/5"
-                )}
-              >
-                <div className="w-16 h-16 rounded-full glass-card flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <CloudUpload className={cn("w-8 h-8 text-on-surface-variant group-hover:text-nature-green", importStatus === 'success' && 'text-nature-green')} />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-on-surface mb-1 group-hover:text-nature-green transition-colors">
-                    {importStatus === 'success' ? 'Statement Loaded!' : 'Drop bank CSV statement here'}
-                  </h2>
-                  <p className="text-xs text-on-surface-variant max-w-[280px] mx-auto">
-                    {importStatus === 'success' 
-                      ? `${parsedTxs.length} transaction entries detected in CSV ledger.` 
-                      : 'Upload standard statements. Clean merchant extraction and currency parsing is automatic.'}
+            {mappingMode ? (
+              /* Inline Column Mapping Mode */
+              <div className="space-y-5 text-left py-2 px-2">
+                <div className="bg-ocean-blue/10 border border-ocean-blue/20 rounded-2xl p-4 flex gap-3 items-start">
+                  <Info className="w-5 h-5 text-ocean-blue shrink-0 mt-0.5" />
+                  <p className="text-[11px] leading-relaxed text-on-surface-variant">
+                    We couldn't match this CSV file layout automatically. Map the columns using the sample rows below.
                   </p>
                 </div>
-              </div>
 
-              {importStatus === 'success' && (
-                <div className="flex items-center justify-between w-full bg-surface-container-low rounded-2xl p-4 border border-white/5 font-mono text-xs text-on-surface-variant">
-                  <div className="flex items-center gap-2 truncate max-w-[80%]">
-                    <CheckCircle className="w-4 h-4 text-nature-green shrink-0 animate-bounce" />
-                    <span className="truncate">{fileName}</span>
+                {/* Sample Data Table */}
+                <div className="space-y-1.5">
+                  <label className="text-[9px] uppercase font-bold text-on-surface-variant tracking-wider font-mono">Sample Rows Preview</label>
+                  <div className="overflow-x-auto border border-white/5 rounded-2xl max-h-32 scrollbar-thin">
+                    <table className="w-full text-left font-mono text-[9px]">
+                      <thead>
+                        <tr className="border-b border-white/5 bg-white/[0.02]">
+                          {csvHeaders.map((header, idx) => (
+                            <th key={idx} className="p-2 text-on-surface font-bold whitespace-nowrap border-r border-white/5 last:border-r-0">
+                              {header || `Col ${idx + 1}`}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {csvPreviewRows.map((row, rowIdx) => (
+                          <tr key={rowIdx} className="border-b border-white/5 bg-transparent last:border-b-0">
+                            {csvHeaders.map((_, colIdx) => (
+                              <td key={colIdx} className="p-2 text-on-surface-variant whitespace-nowrap border-r border-white/5 last:border-r-0">
+                                {row[colIdx] || ''}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
+                </div>
+
+                {/* Form Fields */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] uppercase font-bold text-on-surface-variant tracking-wider font-mono">Date Column</label>
+                    <select
+                      value={dateHeader}
+                      onChange={(e) => setDateHeader(e.target.value)}
+                      className="w-full bg-surface-dark border border-white/10 rounded-xl px-3 py-2 font-mono text-xs text-on-surface focus:outline-none focus:border-nature-green/50 cursor-pointer"
+                    >
+                      <option value="">-- Select Column --</option>
+                      {csvHeaders.map(h => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] uppercase font-bold text-on-surface-variant tracking-wider font-mono">Merchant Column</label>
+                    <select
+                      value={descHeader}
+                      onChange={(e) => setDescHeader(e.target.value)}
+                      className="w-full bg-surface-dark border border-white/10 rounded-xl px-3 py-2 font-mono text-xs text-on-surface focus:outline-none focus:border-nature-green/50 cursor-pointer"
+                    >
+                      <option value="">-- Select Column --</option>
+                      {csvHeaders.map(h => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <label className="text-[9px] uppercase font-bold text-on-surface-variant tracking-wider font-mono">Amount Layout</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setAmountType('single')}
+                        className={cn(
+                          "py-1.5 px-3 rounded-xl border font-mono text-[11px] text-center transition-all cursor-pointer",
+                          amountType === 'single'
+                            ? "bg-nature-green/10 border-nature-green/30 text-nature-green"
+                            : "bg-surface-dark border-white/10 text-on-surface-variant hover:border-white/20"
+                        )}
+                      >
+                        Single Column (+/-)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAmountType('split')}
+                        className={cn(
+                          "py-1.5 px-3 rounded-xl border font-mono text-[11px] text-center transition-all cursor-pointer",
+                          amountType === 'split'
+                            ? "bg-nature-green/10 border-nature-green/30 text-nature-green"
+                            : "bg-surface-dark border-white/10 text-on-surface-variant hover:border-white/20"
+                        )}
+                      >
+                        Split Debit/Credit
+                      </button>
+                    </div>
+                  </div>
+
+                  {amountType === 'single' ? (
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <label className="text-[9px] uppercase font-bold text-on-surface-variant tracking-wider font-mono">Amount Column</label>
+                      <select
+                        value={amountHeader}
+                        onChange={(e) => setAmountHeader(e.target.value)}
+                        className="w-full bg-surface-dark border border-white/10 rounded-xl px-3 py-2 font-mono text-xs text-on-surface focus:outline-none focus:border-nature-green/50 cursor-pointer"
+                      >
+                        <option value="">-- Select Column --</option>
+                        {csvHeaders.map(h => (
+                          <option key={h} value={h}>{h}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-1.5">
+                        <label className="text-[9px] uppercase font-bold text-on-surface-variant tracking-wider font-mono">Debit Column (Out)</label>
+                        <select
+                          value={debitHeader}
+                          onChange={(e) => setDebitHeader(e.target.value)}
+                          className="w-full bg-surface-dark border border-white/10 rounded-xl px-3 py-2 font-mono text-xs text-on-surface focus:outline-none focus:border-nature-green/50 cursor-pointer"
+                        >
+                          <option value="">-- Select Column --</option>
+                          {csvHeaders.map(h => (
+                            <option key={h} value={h}>{h}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[9px] uppercase font-bold text-on-surface-variant tracking-wider font-mono">Credit Column (In)</label>
+                        <select
+                          value={creditHeader}
+                          onChange={(e) => setCreditHeader(e.target.value)}
+                          className="w-full bg-surface-dark border border-white/10 rounded-xl px-3 py-2 font-mono text-xs text-on-surface focus:outline-none focus:border-nature-green/50 cursor-pointer"
+                        >
+                          <option value="">-- Select Column --</option>
+                          {csvHeaders.map(h => (
+                            <option key={h} value={h}>{h}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Save Layout Checkbox */}
+                <div className="border-t border-white/5 pt-3.5 space-y-2.5">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={shouldSaveProfile}
+                      onChange={(e) => setShouldSaveProfile(e.target.checked)}
+                      className="w-4 h-4 rounded-sm border border-white/10 bg-surface-dark text-nature-green focus:ring-0 outline-none cursor-pointer"
+                    />
+                    <span className="text-xs text-on-surface">Save layout template for future statements</span>
+                  </label>
+
+                  {shouldSaveProfile && (
+                    <div className="space-y-1">
+                      <label className="text-[9px] uppercase font-bold text-on-surface-variant tracking-wider font-mono">Template Name</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. My Bank Statement Profile"
+                        value={profileNameInput}
+                        onChange={(e) => setProfileNameInput(e.target.value)}
+                        className="w-full bg-surface-dark border border-white/10 rounded-xl px-3 py-1.5 font-mono text-xs text-on-surface focus:outline-none focus:border-nature-green/50"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Inline Action Buttons */}
+                <div className="flex gap-4 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMappingMode(false);
                       setParsedTxs([]);
                       setFileName('');
                       setImportStatus('idle');
                     }}
-                    className="text-earth-clay font-bold hover:underline"
+                    className="flex-1 py-2.5 rounded-xl border border-white/10 hover:border-earth-clay hover:text-earth-clay text-on-surface text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
                   >
-                    Clear
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleApplyMapping}
+                    className="flex-1 py-2.5 rounded-xl bg-linear-to-tr from-ocean-blue to-nature-green text-surface-dark text-xs font-bold uppercase tracking-wider hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(0,242,234,0.2)] cursor-pointer"
+                  >
+                    Apply & Parse
                   </button>
                 </div>
-              )}
+              </div>
+            ) : (
+              /* Standard Import Mode inside Wizard */
+              <section className="flex flex-col items-center justify-center gap-6 py-2 px-2 w-full">
+                {/* Saved layouts banner */}
+                {importStatus === 'idle' && customProfiles.length > 0 && (
+                  <div className="w-full space-y-2 border border-white/5 rounded-2xl p-4 bg-white/[0.01]">
+                    <div className="text-[10px] text-on-surface-variant font-bold uppercase tracking-widest font-mono flex items-center gap-1.5 text-left">
+                      <Settings className="w-3.5 h-3.5 text-ocean-blue" />
+                      Saved Bank Formats
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-24 overflow-y-auto scrollbar-thin">
+                      {customProfiles.map(p => (
+                        <div key={p.id} className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-surface-container-low border border-white/5 text-[10px] font-mono">
+                          <span className="text-on-surface truncate pr-2">{p.name}</span>
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeleteProfile(p.id, e)}
+                            className="p-1 text-on-surface-variant hover:text-earth-clay transition-colors cursor-pointer"
+                            title="Delete template profile"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-              {importStatus === 'error' && (
-                <div className="flex items-center gap-2 text-earth-clay font-mono text-xs bg-earth-clay/10 p-4 border border-earth-clay/20 rounded-2xl w-full">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{fileName}</span>
-                </div>
-              )}
+                {/* Auto-detected custom profile banner */}
+                {importStatus === 'success' && detectedProfile && (
+                  <div className="w-full p-3 bg-nature-green/10 border border-nature-green/20 rounded-2xl flex items-center justify-between gap-3 text-xs text-left">
+                    <div className="flex items-center gap-2 text-on-surface-variant">
+                      <CheckCircle className="w-4 h-4 text-nature-green shrink-0" />
+                      <span>Mapped using profile <strong>{detectedProfile.name}</strong>.</span>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        setMappingMode(true);
+                        setDateHeader(detectedProfile.dateHeader);
+                        setDescHeader(detectedProfile.counterpartyHeader);
+                        setAmountType(detectedProfile.amountType);
+                        if (detectedProfile.amountType === 'single') {
+                          setAmountHeader(detectedProfile.amountHeader || '');
+                        } else {
+                          setDebitHeader(detectedProfile.debitHeader || '');
+                          setCreditHeader(detectedProfile.creditHeader || '');
+                        }
+                        setProfileNameInput(detectedProfile.name);
+                        setShouldSaveProfile(false);
+                      }}
+                      className="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-on-surface border border-white/10 hover:border-white/20 transition-all font-bold font-mono text-[9px] shrink-0 cursor-pointer"
+                    >
+                      Remap Columns
+                    </button>
+                  </div>
+                )}
 
-              {importStatus === 'idle' && (
-                <button 
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleFileChange} 
+                  accept=".csv, text/csv, application/csv, text/comma-separated-values, application/vnd.ms-excel" 
+                  className="hidden" 
+                />
+                
+                <div 
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInputRef.current?.click(); } }}
+                  onDragEnter={handleDrag}
+                  onDragOver={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDrop={handleFileDrop}
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-8 py-3.5 rounded-full glass-card border-white/10 text-on-surface text-xs font-bold uppercase tracking-wider hover:border-nature-green hover:text-nature-green transition-all"
+                  className={cn(
+                    "w-full h-56 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center gap-4 cursor-pointer transition-all group px-4 text-center",
+                    dragActive ? "border-nature-green bg-nature-green/10" : "border-white/10 hover:border-nature-green hover:bg-nature-green/5"
+                  )}
                 >
-                  Browse Files
-                </button>
-              )}
-            </section>
+                  <div className="w-16 h-16 rounded-full glass-card flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <CloudUpload className={cn("w-8 h-8 text-on-surface-variant group-hover:text-nature-green", importStatus === 'success' && 'text-nature-green')} />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-on-surface mb-1 group-hover:text-nature-green transition-colors">
+                      {importStatus === 'success' ? 'Statement Loaded!' : 'Drop bank CSV statement here'}
+                    </h2>
+                    <p className="text-xs text-on-surface-variant max-w-[280px] mx-auto">
+                      {importStatus === 'success' 
+                        ? `${parsedTxs.length} transaction entries detected in CSV ledger.` 
+                        : 'Upload standard statements. Clean merchant extraction and currency parsing is automatic.'}
+                    </p>
+                  </div>
+                </div>
+
+                {importStatus === 'success' && (
+                  <div className="flex items-center justify-between w-full bg-surface-container-low rounded-2xl p-4 border border-white/5 font-mono text-xs text-on-surface-variant">
+                    <div className="flex items-center gap-2 truncate max-w-[80%]">
+                      <CheckCircle className="w-4 h-4 text-nature-green shrink-0 animate-bounce" />
+                      <span className="truncate">{fileName}</span>
+                    </div>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setParsedTxs([]);
+                        setFileName('');
+                        setImportStatus('idle');
+                        setDetectedProfile(null);
+                      }}
+                      className="text-earth-clay font-bold hover:underline cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
+
+                {importStatus === 'error' && (
+                  <div className="flex items-center gap-2 text-earth-clay font-mono text-xs bg-earth-clay/10 p-4 border border-earth-clay/20 rounded-2xl w-full text-left">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{fileName}</span>
+                  </div>
+                )}
+
+                {importStatus === 'idle' && (
+                  <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-8 py-3.5 rounded-full glass-card border-white/10 text-on-surface text-xs font-bold uppercase tracking-wider hover:border-nature-green hover:text-nature-green transition-all cursor-pointer"
+                  >
+                    Browse Files
+                  </button>
+                )}
+              </section>
+            )}
           </div>
         );
       case 5:
@@ -940,7 +1370,10 @@ export default function WizardView({ onComplete, onCancel }: WizardViewProps) {
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="relative w-full max-w-[560px] max-h-[calc(100vh-2rem)] bg-surface-container rounded-[36px] p-6 md:py-8 md:px-10 shadow-[0_0_80px_rgba(0,242,234,0.1)] border border-white/5 flex flex-col"
+        className={cn(
+          "relative w-full bg-surface-container rounded-[36px] p-6 md:py-8 md:px-10 shadow-[0_0_80px_rgba(0,242,234,0.1)] border border-white/5 flex flex-col transition-all duration-300",
+          step === 4 && mappingMode ? "max-w-[760px] max-h-[90vh]" : "max-w-[560px] max-h-[calc(100vh-2rem)]"
+        )}
       >
         <div className="flex-1 overflow-y-auto pr-1 min-h-0">
           <AnimatePresence mode="wait">
@@ -956,39 +1389,41 @@ export default function WizardView({ onComplete, onCancel }: WizardViewProps) {
           </AnimatePresence>
         </div>
 
-        <footer className={cn("flex items-center mt-6 pt-4 border-t border-white/5 shrink-0", step === 5 ? "justify-center" : "justify-between")}>
-          {step < 5 && (
+        {!(step === 4 && mappingMode) && (
+          <footer className={cn("flex items-center mt-6 pt-4 border-t border-white/5 shrink-0", step === 5 ? "justify-center" : "justify-between")}>
+            {step < 5 && (
+              <button 
+                onClick={prevStep} 
+                disabled={isFinishing}
+                className="group flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-all text-xs font-mono uppercase tracking-widest font-bold p-2 disabled:opacity-30 cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                {step === 1 ? 'Cancel' : 'Back'}
+              </button>
+            )}
+            
             <button 
-              onClick={prevStep} 
+              onClick={handleNext}
               disabled={isFinishing}
-              className="group flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-all text-xs font-mono uppercase tracking-widest font-bold p-2 disabled:opacity-30"
+              className={cn(
+                "bg-linear-to-tr from-ocean-blue to-nature-green text-surface-dark rounded-2xl flex items-center justify-center gap-3 hover:scale-105 active:scale-95 transition-all shadow-[0_10px_30px_rgba(0,242,234,0.2)] font-bold disabled:opacity-30 cursor-pointer",
+                step === 5 ? "w-full py-4 text-lg font-black h-16 mt-2" : "px-8 py-3.5 text-base h-14"
+              )}
             >
-              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-              {step === 1 ? 'Cancel' : 'Back'}
+              {step === 5 ? (
+                <>
+                  <CheckCircle className="w-5 h-5" />
+                  Finish Setup
+                </>
+              ) : (
+                <>
+                  Next
+                  <ArrowRight className="w-5 h-5" />
+                </>
+              )}
             </button>
-          )}
-          
-          <button 
-            onClick={handleNext}
-            disabled={isFinishing}
-            className={cn(
-              "bg-linear-to-tr from-ocean-blue to-nature-green text-surface-dark rounded-2xl flex items-center justify-center gap-3 hover:scale-105 active:scale-95 transition-all shadow-[0_10px_30px_rgba(0,242,234,0.2)] font-bold disabled:opacity-30",
-              step === 5 ? "w-full py-4 text-lg font-black h-16 mt-2" : "px-8 py-3.5 text-base h-14"
-            )}
-          >
-            {step === 5 ? (
-              <>
-                <CheckCircle className="w-5 h-5" />
-                Finish Setup
-              </>
-            ) : (
-              <>
-                Next
-                <ArrowRight className="w-5 h-5" />
-              </>
-            )}
-          </button>
-        </footer>
+          </footer>
+        )}
       </motion.main>
     </div>
   );

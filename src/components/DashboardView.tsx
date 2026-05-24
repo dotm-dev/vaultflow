@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Settings, LogOut, ArrowUp, ArrowDown, Plus, Download, Sun, Moon, Utensils, Car, Zap, ShoppingBag, Gamepad2, Home, Heart, MoreHorizontal as OtherIcon, FileText, Shield, Lock, Code, X, CloudUpload, Edit2, DollarSign, Menu } from 'lucide-react';
+import { Settings, LogOut, ArrowUp, ArrowDown, Plus, Download, Sun, Moon, Utensils, Car, Zap, ShoppingBag, Gamepad2, Home, Heart, MoreHorizontal as OtherIcon, FileText, Shield, Lock, Code, X, CloudUpload, Edit2, DollarSign, Menu, ChevronDown, Activity } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 import { cn } from '@/src/lib/utils';
 import { Transaction } from '../types';
@@ -30,6 +30,9 @@ interface DashboardViewProps {
   onUpdateVaultName: (name: string) => Promise<void>;
   currentLedgerBalance: number;
   ledgerCreatedAt: number;
+  fixedCategories: string[];
+  onViewReservesFlow: () => void;
+  onViewReservesMap: () => void;
 }
 
 export default function DashboardView({ 
@@ -53,9 +56,24 @@ export default function DashboardView({
   activeVaultName,
   onUpdateVaultName,
   currentLedgerBalance,
-  ledgerCreatedAt
+  ledgerCreatedAt,
+  fixedCategories,
+  onViewReservesFlow,
+  onViewReservesMap
 }: DashboardViewProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isExploreOpen, setIsExploreOpen] = useState(false);
+  const exploreRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (exploreRef.current && !exploreRef.current.contains(event.target as Node)) {
+        setIsExploreOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
   const [activeModal, setActiveModal] = useState<'docs' | 'security' | 'manifest' | 'source' | null>(null);
   const { categories, isLoading: isCategoriesLoading } = useCategories();
   const [chartRange, setChartRange] = useState<'1M' | '3M' | '6M' | '1Y'>('1M');
@@ -116,8 +134,7 @@ export default function DashboardView({
   const netReservesCents = calculateBalanceAt(Infinity, currentLedgerBalance, ledgerCreatedAt, incomes, expenses);
 
   // 2. Pillars (Fixed vs Agile vs Retained)
-  const FIXED_CATEGORIES = ['home', 'utilities', 'health'];
-  const fixedCents = expenses.filter(t => FIXED_CATEGORIES.includes(t.category_id || '')).reduce((sum, t) => sum + t.amount, 0);
+  const fixedCents = expenses.filter(t => fixedCategories.includes(t.category_id || '')).reduce((sum, t) => sum + t.amount, 0);
   const agileCents = totalExpensesCents - fixedCents;
   const retainedCents = Math.max(0, netReservesCents);
   
@@ -296,12 +313,59 @@ export default function DashboardView({
 
           {/* Right Side: Buttons (Desktop) */}
           <div className="hidden md:flex items-center gap-2">
-            <button onClick={onExpectedBudget} className="px-4.5 h-9 rounded-full flex items-center justify-center text-[10px] font-bold uppercase tracking-widest bg-ocean-blue/15 text-ocean-blue border border-ocean-blue/30 hover:bg-ocean-blue/25 hover:border-ocean-blue/40 hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-[0_0_15px_rgba(92,124,138,0.15)]" title="Open Monthly Expected Budget Planner">
-              Planner
-            </button>
-            <button onClick={onSetBudget} className="px-4.5 h-9 rounded-full flex items-center justify-center text-[10px] font-bold uppercase tracking-widest bg-nature-green/15 text-nature-green border border-nature-green/30 hover:bg-nature-green/25 hover:border-nature-green/40 hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-[0_0_15px_rgba(123,160,91,0.15)]">
-              Budgets
-            </button>
+            <div ref={exploreRef} className="relative">
+              <button 
+                onClick={() => setIsExploreOpen(!isExploreOpen)}
+                className="px-4.5 h-9 rounded-full flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest bg-white/5 text-on-surface-variant hover:text-on-surface border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer animate-none"
+                title="Navigate VaultFlow Views"
+              >
+                <span>Navigate</span>
+                <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-200", isExploreOpen && "rotate-180")} />
+              </button>
+              
+              <AnimatePresence>
+                {isExploreOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 mt-2 w-48 rounded-2xl bg-surface-container/95 border border-white/10 shadow-2xl backdrop-blur-md p-1.5 z-50 flex flex-col"
+                  >
+                    <button
+                      onClick={() => {
+                        setIsExploreOpen(false);
+                        onExpectedBudget();
+                      }}
+                      className="w-full px-3 py-2.5 rounded-xl flex items-center gap-2.5 text-[10px] font-bold uppercase tracking-wider text-left text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors cursor-pointer"
+                    >
+                      <FileText className="w-4 h-4 text-ocean-blue" />
+                      <span>Planner</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsExploreOpen(false);
+                        onSetBudget();
+                      }}
+                      className="w-full px-3 py-2.5 rounded-xl flex items-center gap-2.5 text-[10px] font-bold uppercase tracking-wider text-left text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors cursor-pointer"
+                    >
+                      <DollarSign className="w-4 h-4 text-nature-green" />
+                      <span>Budgets</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsExploreOpen(false);
+                        onViewReservesMap();
+                      }}
+                      className="w-full px-3 py-2.5 rounded-xl flex items-center gap-2.5 text-[10px] font-bold uppercase tracking-wider text-left text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors cursor-pointer"
+                    >
+                      <Activity className="w-4 h-4 text-sky-teal" />
+                      <span>Reserves Map</span>
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
             <div className="w-px h-4 bg-white/10 mx-1"></div>
             <button 
               onClick={onToggleTheme} 
@@ -423,6 +487,24 @@ export default function DashboardView({
                   <button 
                     onClick={() => {
                       setIsMobileMenuOpen(false);
+                      onViewReservesMap();
+                    }}
+                    className="h-10 rounded-xl flex items-center justify-center text-[10px] font-bold uppercase tracking-widest bg-sky-teal/15 text-sky-teal border border-sky-teal/30 hover:bg-sky-teal/25 hover:border-sky-teal/40 transition-all cursor-pointer"
+                  >
+                    Reserves Map
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      onViewReservesFlow();
+                    }}
+                    className="h-10 rounded-xl flex items-center justify-center text-[10px] font-bold uppercase tracking-widest bg-nature-green/15 text-nature-green border border-nature-green/30 hover:bg-nature-green/25 hover:border-nature-green/40 transition-all cursor-pointer"
+                  >
+                    Reserves Flow
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
                       onSettings();
                     }}
                     className="h-10 rounded-xl flex items-center justify-center text-[10px] font-bold uppercase tracking-widest bg-white/5 text-on-surface-variant border border-white/10 hover:bg-white/10 hover:text-on-surface transition-all cursor-pointer"
@@ -491,6 +573,20 @@ export default function DashboardView({
            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-2">
              <div className="flex items-center gap-3">
                <h3 className="text-[11px] font-bold text-on-surface-variant tracking-[0.2em] uppercase">Reserves & Flow</h3>
+               <button
+                 onClick={onViewReservesFlow}
+                 className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-nature-green hover:bg-nature-green/10 border border-nature-green/30 hover:border-nature-green/50 transition-all cursor-pointer leading-none"
+                 title="View detailed reserves flow and runway metrics"
+               >
+                 Details
+               </button>
+               <button
+                 onClick={onViewReservesMap}
+                 className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-sky-teal hover:bg-sky-teal/10 border border-sky-teal/30 hover:border-sky-teal/50 transition-all cursor-pointer leading-none"
+                 title="View interactive cash flow distribution map"
+               >
+                 Map
+               </button>
                <div className="flex bg-white/5 p-0.5 rounded-full border border-white/5">
                  <button
                    onClick={() => setChartMetric('spendings')}

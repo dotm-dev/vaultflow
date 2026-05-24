@@ -1,4 +1,4 @@
-import { Transaction } from '../types';
+import { Transaction, CSVMappingProfile } from '../types';
 
 /**
  * VaultFlow Local-First CSV Bank Statement Parsing Engine
@@ -292,3 +292,127 @@ export function parseCSVStatement(fileContent: string): Partial<Transaction>[] {
 
   return [];
 }
+
+/**
+ * Detects the most likely CSV delimiter based on character counts in the header row.
+ */
+export function detectCSVDelimiter(firstLine: string): string {
+  const delimiters = [',', ';', '\t'];
+  let bestDelimiter = ',';
+  let maxCount = -1;
+  for (const d of delimiters) {
+    const count = firstLine.split(d).length;
+    if (count > maxCount) {
+      maxCount = count;
+      bestDelimiter = d;
+    }
+  }
+  return bestDelimiter;
+}
+
+/**
+ * Parses headers and up to 3 sample rows from the CSV content to provide a UI preview.
+ */
+export function parseCSVPreview(fileContent: string): { headers: string[]; previewRows: string[][]; delimiter: string } {
+  if (!fileContent) return { headers: [], previewRows: [], delimiter: ',' };
+  const lines = fileContent
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(line => line.length > 0);
+  
+  if (lines.length === 0) return { headers: [], previewRows: [], delimiter: ',' };
+  
+  const delimiter = detectCSVDelimiter(lines[0]);
+  const headers = splitCSVLine(lines[0], delimiter);
+  
+  const previewRows: string[][] = [];
+  const maxPreview = Math.min(lines.length, 4); // Headers + up to 3 data rows
+  for (let i = 1; i < maxPreview; i++) {
+    previewRows.push(splitCSVLine(lines[i], delimiter));
+  }
+  
+  return { headers, previewRows, delimiter };
+}
+
+/**
+ * Parses the CSV file using a custom mapping configuration profile.
+ */
+export function parseCSVWithProfile(fileContent: string, profile: CSVMappingProfile): Partial<Transaction>[] {
+  if (!fileContent) return [];
+  
+  const lines = fileContent
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(line => line.length > 0);
+    
+  if (lines.length <= 1) return [];
+  
+  const headers = splitCSVLine(lines[0], profile.delimiter).map(h => h.toLowerCase());
+  
+  // Find index of each mapped column
+  const dateIdx = headers.indexOf(profile.dateHeader.toLowerCase());
+  const descIdx = headers.indexOf(profile.counterpartyHeader.toLowerCase());
+  
+  let amountIdx = -1;
+  let debitIdx = -1;
+  let creditIdx = -1;
+  
+  if (profile.amountType === 'single') {
+    amountIdx = headers.indexOf((profile.amountHeader || '').toLowerCase());
+  } else {
+    debitIdx = headers.indexOf((profile.debitHeader || '').toLowerCase());
+    creditIdx = headers.indexOf((profile.creditHeader || '').toLowerCase());
+  }
+  
+  const transactions: Partial<Transaction>[] = [];
+  
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line) continue;
+    
+    const fields = splitCSVLine(line, profile.delimiter);
+    if (fields.length < Math.max(dateIdx, descIdx, amountIdx, debitIdx, creditIdx) + 1) continue;
+    
+    const rawDate = fields[dateIdx];
+    const rawDesc = fields[descIdx];
+    
+    const booking_date = parseCSVDate(rawDate);
+    const counterparty = cleanMerchantName(rawDesc);
+    
+    let amount = 0;
+    let type: 'income' | 'expense' = 'expense';
+    
+    if (profile.amountType === 'single') {
+      const rawAmount = fields[amountIdx];
+      const parsed = parseCSVAmount(rawAmount);
+      amount = parsed.amount;
+      type = parsed.type;
+    } else {
+      const rawDebit = fields[debitIdx];
+      const rawCredit = fields[creditIdx];
+      
+      // In split debit/credit, one is typically present and the other is empty or zero
+      if (rawCredit && rawCredit.trim() !== '' && rawCredit.trim() !== '0' && rawCredit.trim() !== '0.00') {
+        const parsed = parseCSVAmount(rawCredit);
+        amount = parsed.amount;
+        type = 'income';
+      } else if (rawDebit && rawDebit.trim() !== '' && rawDebit.trim() !== '0' && rawDebit.trim() !== '0.00') {
+        const parsed = parseCSVAmount(rawDebit);
+        amount = parsed.amount;
+        type = 'expense';
+      }
+    }
+    
+    transactions.push({
+      booking_date,
+      amount,
+      type,
+      counterparty,
+      category_id: 'other', // Will be classified by AI if enabled
+      raw_data: line,
+    });
+  }
+  
+  return transactions;
+}
+

@@ -8,14 +8,160 @@ import SettingsView from './components/SettingsView';
 import BudgetView from './components/BudgetView';
 import ExpectedBudgetView from './components/ExpectedBudgetView';
 import CategoryDetailsView from './components/CategoryDetailsView';
+import ReservesFlowView from './components/ReservesFlowView';
+import ReservesMapView from './components/ReservesMapView';
 import ManualExpenseModal from './components/ManualExpenseModal';
 import ImportModal from './components/ImportModal';
 import { AppState, AppView, Transaction } from './types';
 import { AnimatePresence, motion } from 'motion/react';
-import { getConfig, getAllEncryptedTransactions, saveEncryptedTransaction, saveConfig, clearAllLocalData, clearLocalVaultCache } from './lib/db';
+import { getConfig, getAllEncryptedTransactions, saveEncryptedTransaction, saveConfig, clearAllLocalData, clearLocalVaultCache, deleteEncryptedTransaction } from './lib/db';
 import { deriveEncryptionKey, decryptPayload, encryptPayload, hashPasswordForChallenge, hexToBytes } from './lib/crypto';
 import { getCloudManifest, saveCloudManifest, saveCloudVaultData, getCloudVaultData, isGoogleConnected, getConnectedGoogleUser } from './lib/googleDriveSync';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, CheckCircle, AlertCircle, AlertTriangle, Info, X } from 'lucide-react';
+import { getTimezoneDateParts, getTimestampFromParts } from './lib/formatters';
+import { cn } from './lib/utils';
+
+// Helper to calculate the next recurrence date in the target timezone
+export function calculateNextOccurrence(
+  lastOccurrenceTimestamp: number,
+  interval: number,
+  unit: 'days' | 'weeks' | 'months' | 'years',
+  timezone: string
+): number {
+  if (interval <= 0) return lastOccurrenceTimestamp;
+  
+  if (unit === 'days') {
+    return lastOccurrenceTimestamp + interval * 24 * 60 * 60 * 1000;
+  }
+  if (unit === 'weeks') {
+    return lastOccurrenceTimestamp + interval * 7 * 24 * 60 * 60 * 1000;
+  }
+  
+  // For months and years, we use timezone date parts to be calendar-accurate
+  const parts = getTimezoneDateParts(lastOccurrenceTimestamp, timezone);
+  let year = parts.year;
+  let month = parts.month;
+  let day = parts.day;
+  
+  if (unit === 'months') {
+    month += interval;
+    year += Math.floor((month - 1) / 12);
+    month = ((month - 1) % 12) + 1;
+  } else if (unit === 'years') {
+    year += interval;
+  }
+  
+  // Constrain days to the maximum day of the target month (e.g. Feb 31 -> Feb 28/29)
+  const daysInMonth = new Date(year, month, 0).getDate();
+  day = Math.min(day, daysInMonth);
+  
+  return getTimestampFromParts(year, month, day, parts.hour, parts.minute, parts.second, timezone);
+}
+
+// Helper to process and generate all due recurring transactions
+export async function runRecurringProcessing(
+  currentTransactions: Transaction[],
+  key: CryptoKey,
+  timezone: string
+): Promise<{ updatedTxs: Transaction[]; generatedCount: number; generatedNames: string[] }> {
+  // Find all active parent templates
+  const parentTxs = currentTransactions.filter(t => t.recurrence && !t.recurrence_parent_id);
+  if (parentTxs.length === 0) {
+    return { updatedTxs: currentTransactions, generatedCount: 0, generatedNames: [] };
+  }
+
+  let generatedCount = 0;
+  const generatedNames: string[] = [];
+  const newTransactions: Transaction[] = [];
+  const modifiedParentTxs: Record<string, Transaction> = {};
+
+  const now = Date.now();
+
+  for (const parent of parentTxs) {
+    const rec = parent.recurrence!;
+    let lastProcessed = rec.last_processed_date || parent.booking_date;
+    
+    let currentLast = lastProcessed;
+    const interval = rec.interval;
+    const unit = rec.unit;
+    
+    let occurrenceCountForParent = 0;
+    while (true) {
+      const nextDate = calculateNextOccurrence(currentLast, interval, unit, timezone);
+      
+      // Safety checks: nextDate must be in the past/present and strictly greater than currentLast
+      if (nextDate <= now && nextDate > currentLast) {
+        generatedCount++;
+        occurrenceCountForParent++;
+        generatedNames.push(parent.counterparty);
+        
+        const newTx: Transaction = {
+          id: crypto.randomUUID(),
+          booking_date: nextDate,
+          amount: parent.amount,
+          currency: parent.currency,
+          counterparty: parent.counterparty,
+          category_id: parent.category_id,
+          type: parent.type,
+          recurrence_parent_id: parent.id,
+          recurrence_instance_date: nextDate
+        };
+        
+        newTransactions.push(newTx);
+        currentLast = nextDate;
+      } else {
+        break;
+      }
+    }
+    
+    if (occurrenceCountForParent > 0) {
+      // Update parent's last_processed_date
+      const updatedParent: Transaction = {
+        ...parent,
+        recurrence: {
+          ...rec,
+          last_processed_date: currentLast
+        }
+      };
+      modifiedParentTxs[parent.id] = updatedParent;
+    }
+  }
+
+  if (newTransactions.length === 0) {
+    return { updatedTxs: currentTransactions, generatedCount: 0, generatedNames: [] };
+  }
+
+  // Encrypt and save all new transactions and modified parent transactions
+  for (const tx of newTransactions) {
+    const payloadString = JSON.stringify(tx);
+    const { cipherText, iv } = await encryptPayload(payloadString, key);
+    await saveEncryptedTransaction(tx.id, cipherText, iv);
+  }
+
+  for (const parentId of Object.keys(modifiedParentTxs)) {
+    const parent = modifiedParentTxs[parentId];
+    const payloadString = JSON.stringify(parent);
+    const { cipherText, iv } = await encryptPayload(payloadString, key);
+    await saveEncryptedTransaction(parent.id, cipherText, iv);
+  }
+
+  // Construct the updated overall transactions list
+  const finalTxs = currentTransactions.map(t => {
+    if (modifiedParentTxs[t.id]) {
+      return modifiedParentTxs[t.id];
+    }
+    return t;
+  });
+
+  // Append new occurrences
+  const allTxs = [...newTransactions, ...finalTxs].sort((a, b) => b.booking_date - a.booking_date);
+
+  return {
+    updatedTxs: allTxs,
+    generatedCount,
+    generatedNames
+  };
+}
 
 export default function App() {
   const [state, setState] = useState<AppState>({
@@ -86,6 +232,7 @@ export default function App() {
   const [connectedGoogleUser, setConnectedGoogleUser] = useState<any | null>(null);
   const [creationBalance, setCreationBalance] = useState<string>('0');
   const [ledgerCreatedAt, setLedgerCreatedAt] = useState<number>(0);
+  const [fixedCategories, setFixedCategories] = useState<string[]>(['home', 'utilities', 'health']);
   const [syncInterval, setSyncInterval] = useState<number>(() => {
     const saved = localStorage.getItem('vaultflow_sync_interval');
     return saved ? Number(saved) : 60000;
@@ -95,6 +242,17 @@ export default function App() {
   const [backupEnabled, setBackupEnabled] = useState<boolean>(true);
   const [keepCloudVaultLocal, setKeepCloudVaultLocal] = useState<boolean>(false);
   const [lastSyncSuccess, setLastSyncSuccess] = useState<number | null>(null);
+
+  // Toast notifications state
+  const [toasts, setToasts] = useState<{ id: string; message: string; type: 'success' | 'info' | 'warning' | 'error' }[]>([]);
+
+  const addToast = (message: string, type: 'success' | 'info' | 'warning' | 'error' = 'success') => {
+    const id = crypto.randomUUID();
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 4000);
+  };
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -146,6 +304,7 @@ export default function App() {
         const storedLastSync = await getConfig('last_synced_at');
         const storedCreationBalance = await getConfig('creation_balance');
         const storedLedgerCreatedAt = await getConfig('ledger_created_at');
+        const storedFixedCategories = await getConfig('fixed_categories');
         
         if (storedCurrency) setCurrency(storedCurrency);
         if (storedSeparator !== undefined && storedSeparator !== null) setThousandsSeparator(storedSeparator);
@@ -155,8 +314,31 @@ export default function App() {
         if (storedVaultId) setActiveVaultId(storedVaultId);
         if (storedVaultName) setActiveVaultName(storedVaultName);
         if (storedGoogleUser) setConnectedGoogleUser(storedGoogleUser);
-        if (storedCreationBalance) setCreationBalance(storedCreationBalance);
-        if (storedLedgerCreatedAt) setLedgerCreatedAt(Number(storedLedgerCreatedAt));
+        if (storedSaltHex) {
+          if (storedCreationBalance) {
+            setCreationBalance(storedCreationBalance);
+          } else {
+            await saveConfig('creation_balance', '0');
+            setCreationBalance('0');
+          }
+          if (storedLedgerCreatedAt) {
+            setLedgerCreatedAt(Number(storedLedgerCreatedAt));
+          } else {
+            const defaultCreatedAt = Date.now();
+            await saveConfig('ledger_created_at', defaultCreatedAt);
+            setLedgerCreatedAt(defaultCreatedAt);
+          }
+        }
+        if (storedFixedCategories) {
+          try {
+            const parsed = JSON.parse(storedFixedCategories as string);
+            if (Array.isArray(parsed)) {
+              setFixedCategories(parsed);
+            }
+          } catch (e) {
+            console.error('Failed to parse stored fixed_categories:', e);
+          }
+        }
         // Note: syncInterval is a local user preference stored in localStorage,
         // already initialized from useState. We do NOT override it from IndexedDB.
         if (storedHasUnsynced !== undefined) setHasUnsyncedChanges(!!storedHasUnsynced);
@@ -230,7 +412,8 @@ export default function App() {
           timezone,
           language,
           creation_balance: creationBalance,
-          ledger_created_at: ledgerCreatedAt
+          ledger_created_at: ledgerCreatedAt,
+          fixed_categories: JSON.stringify(fixedCategories)
         }
       };
 
@@ -374,12 +557,29 @@ export default function App() {
       await saveEncryptedTransaction(tx.id, cipherText, iv);
 
       // Update React memory state
-      setTransactions(prev => [tx, ...prev].sort((a, b) => b.booking_date - a.booking_date));
+      const updatedList = [tx, ...transactions].sort((a, b) => b.booking_date - a.booking_date);
+      setTransactions(updatedList);
       
       await saveConfig('has_unsynced_changes', true);
       setHasUnsyncedChanges(true);
 
       setState(prev => ({ ...prev, hasData: true, view: 'dashboard' }));
+
+      // Process recurring scheduler if relevant
+      if (tx.recurrence) {
+        setTimeout(async () => {
+          try {
+            const { updatedTxs, generatedCount } = await runRecurringProcessing(updatedList, activeKey, timezone);
+            if (generatedCount > 0) {
+              setTransactions(updatedTxs);
+              addToast(`Generated ${generatedCount} recurring transaction${generatedCount > 1 ? 's' : ''}`, 'success');
+              await performCloudSync();
+            }
+          } catch (e) {
+            console.error('Failed to run recurring processing on added transaction:', e);
+          }
+        }, 100);
+      }
     } catch (err) {
       console.error('Failed to encrypt and save manual transaction:', err);
     }
@@ -395,7 +595,8 @@ export default function App() {
         await saveEncryptedTransaction(tx.id, cipherText, iv);
       }
       
-      setTransactions(prev => [...newTxs, ...prev].sort((a, b) => b.booking_date - a.booking_date));
+      const updatedList = [...newTxs, ...transactions].sort((a, b) => b.booking_date - a.booking_date);
+      setTransactions(updatedList);
       
       if (newTxs.length > 0) {
         await saveConfig('has_unsynced_changes', true);
@@ -403,6 +604,20 @@ export default function App() {
       }
 
       setState(prev => ({ ...prev, hasData: true, view: 'dashboard' }));
+
+      // Run recurring processing in background after import
+      setTimeout(async () => {
+        try {
+          const { updatedTxs, generatedCount } = await runRecurringProcessing(updatedList, activeKey, timezone);
+          if (generatedCount > 0) {
+            setTransactions(updatedTxs);
+            addToast(`Generated ${generatedCount} recurring transaction${generatedCount > 1 ? 's' : ''}`, 'success');
+            await performCloudSync();
+          }
+        } catch (e) {
+          console.error('Failed to run recurring processing on imported transactions:', e);
+        }
+      }, 100);
     } catch (err) {
       console.error('Failed to encrypt and save imported transactions:', err);
     }
@@ -416,17 +631,75 @@ export default function App() {
       const { cipherText, iv } = await encryptPayload(payloadString, activeKey);
       await saveEncryptedTransaction(tx.id, cipherText, iv);
       
-      setTransactions(prev => {
-        const updated = prev.map(t => t.id === tx.id ? tx : t);
-        return updated.sort((a, b) => b.booking_date - a.booking_date);
-      });
+      const updatedList = transactions.map(t => t.id === tx.id ? tx : t).sort((a, b) => b.booking_date - a.booking_date);
+      setTransactions(updatedList);
 
       await saveConfig('has_unsynced_changes', true);
       setHasUnsyncedChanges(true);
+
+      // Run recurring processing in background after update
+      setTimeout(async () => {
+        try {
+          const { updatedTxs, generatedCount } = await runRecurringProcessing(updatedList, activeKey, timezone);
+          if (generatedCount > 0) {
+            setTransactions(updatedTxs);
+            addToast(`Generated ${generatedCount} recurring transaction${generatedCount > 1 ? 's' : ''}`, 'success');
+            await performCloudSync();
+          }
+        } catch (e) {
+          console.error('Failed to run recurring processing on updated transaction:', e);
+        }
+      }, 100);
     } catch (err) {
       console.error('Failed to update transaction:', err);
     }
   };
+
+  // Handles deleting multiple transactions (e.g. child instances or template parent)
+  const handleDeleteTransactions = async (txIds: string[]) => {
+    if (!activeKey || txIds.length === 0) return;
+    try {
+      for (const id of txIds) {
+        await deleteEncryptedTransaction(id);
+      }
+      setTransactions(prev => prev.filter(t => !txIds.includes(t.id)));
+      await saveConfig('has_unsynced_changes', true);
+      setHasUnsyncedChanges(true);
+      addToast(`${txIds.length} transaction(s) deleted`, 'success');
+      // Trigger cloud sync to upload deletion
+      setTimeout(async () => {
+        try {
+          await performCloudSync();
+        } catch (e) {
+          console.error('Failed to sync after deleting transactions:', e);
+        }
+      }, 100);
+    } catch (err) {
+      console.error('Failed to delete transactions:', err);
+      addToast('Failed to delete transactions', 'error');
+    }
+  };
+
+  // Background Scheduler for Recurring Transactions
+  useEffect(() => {
+    if (!activeKey || isLocked || transactions.length === 0) return;
+    
+    const intervalId = setInterval(async () => {
+      console.log('[RecurringScheduler] Running background recurring check...');
+      try {
+        const { updatedTxs, generatedCount } = await runRecurringProcessing(transactions, activeKey, timezone);
+        if (generatedCount > 0) {
+          setTransactions(updatedTxs);
+          addToast(`Generated ${generatedCount} recurring transaction${generatedCount > 1 ? 's' : ''}`, 'success');
+          await performCloudSync();
+        }
+      } catch (err) {
+        console.error('[RecurringScheduler] Background check failed:', err);
+      }
+    }, 60000); // Check every minute
+    
+    return () => clearInterval(intervalId);
+  }, [activeKey, isLocked, transactions, timezone]);
 
 
 
@@ -567,7 +840,9 @@ export default function App() {
     backupEnabledVal?: boolean,
     keepLocalVal?: boolean,
     timezoneVal?: string,
-    languageVal?: string
+    languageVal?: string,
+    creationBalanceVal?: string,
+    ledgerCreatedAtVal?: number
   ) => {
     setActiveKey(key);
     setTransactions(txs);
@@ -591,15 +866,38 @@ export default function App() {
     const storedSaltHex = await getConfig('encryption_salt');
     const storedChallenge = await getConfig('challenge_hash');
     const storedGoogleUser = await getConfig('google_user');
-    const storedCreationBalance = await getConfig('creation_balance');
-    const storedLedgerCreatedAt = await getConfig('ledger_created_at');
     if (storedSaltHex) setSalt(hexToBytes(storedSaltHex));
     if (storedChallenge) setChallengeHash(storedChallenge);
     if (storedGoogleUser) setConnectedGoogleUser(storedGoogleUser);
-    if (storedCreationBalance) setCreationBalance(storedCreationBalance);
-    if (storedLedgerCreatedAt) setLedgerCreatedAt(Number(storedLedgerCreatedAt));
+
+    if (creationBalanceVal !== undefined) {
+      setCreationBalance(creationBalanceVal);
+    } else {
+      const storedCreationBalance = await getConfig('creation_balance');
+      if (storedCreationBalance) setCreationBalance(storedCreationBalance);
+    }
+
+    if (ledgerCreatedAtVal !== undefined) {
+      setLedgerCreatedAt(Number(ledgerCreatedAtVal));
+    } else {
+      const storedLedgerCreatedAt = await getConfig('ledger_created_at');
+      if (storedLedgerCreatedAt) setLedgerCreatedAt(Number(storedLedgerCreatedAt));
+    }
 
     setIsLocked(false);
+    // Process recurring transactions immediately after cloud unlock
+    setTimeout(async () => {
+      try {
+        const { updatedTxs, generatedCount } = await runRecurringProcessing(txs, key, resolvedTimezone);
+        if (generatedCount > 0) {
+          setTransactions(updatedTxs);
+          addToast(`Generated ${generatedCount} recurring transaction${generatedCount > 1 ? 's' : ''}`, 'success');
+          await performCloudSync();
+        }
+      } catch (err) {
+        console.error('Failed to process recurring transactions on cloud unlock:', err);
+      }
+    }, 100);
     setState(prev => ({
       ...prev,
       hasData: txs.length > 0,
@@ -647,6 +945,20 @@ export default function App() {
       }
       const sortedTxs = decrypted.sort((a, b) => b.booking_date - a.booking_date);
       setTransactions(sortedTxs);
+
+      // Process recurring transactions immediately after local unlock
+      setTimeout(async () => {
+        try {
+          const { updatedTxs, generatedCount } = await runRecurringProcessing(sortedTxs, key, timezone);
+          if (generatedCount > 0) {
+            setTransactions(updatedTxs);
+            addToast(`Generated ${generatedCount} recurring transaction${generatedCount > 1 ? 's' : ''}`, 'success');
+            await performCloudSync();
+          }
+        } catch (err) {
+          console.error('Failed to process recurring transactions on local unlock:', err);
+        }
+      }, 100);
 
       if (googleUserToLink) {
         await saveConfig('google_user', googleUserToLink);
@@ -706,6 +1018,7 @@ export default function App() {
       language?: string;
       creation_balance?: string;
       ledger_created_at?: number;
+      fixed_categories?: string;
     },
     lastSaved: number
   ): Promise<boolean> => {
@@ -774,10 +1087,13 @@ export default function App() {
       const targetCreationBalance = config.creation_balance || '0';
       const targetLedgerCreatedAt = config.ledger_created_at || Date.now();
 
+      const targetFixedCategories = config.fixed_categories ? JSON.parse(config.fixed_categories) : ['home', 'utilities', 'health'];
+
       await saveConfig('backup_enabled', backupEnabledVal);
       await saveConfig('keep_cloud_vault_local', keepLocalVal);
       await saveConfig('creation_balance', targetCreationBalance);
       await saveConfig('ledger_created_at', targetLedgerCreatedAt);
+      await saveConfig('fixed_categories', JSON.stringify(targetFixedCategories));
 
       // 5. Update root state
       setSalt(saltBytes);
@@ -795,6 +1111,7 @@ export default function App() {
       setKeepCloudVaultLocal(keepLocalVal);
       setCreationBalance(targetCreationBalance);
       setLedgerCreatedAt(Number(targetLedgerCreatedAt));
+      setFixedCategories(targetFixedCategories);
       setHasUnsyncedChanges(false);
       setLastSyncSuccess(lastSaved);
 
@@ -832,6 +1149,16 @@ export default function App() {
     if (key === 'language') setLanguage(value);
     if (key === 'creation_balance') setCreationBalance(value);
     if (key === 'ledger_created_at') setLedgerCreatedAt(Number(value));
+    if (key === 'fixed_categories') {
+      try {
+        const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+        if (Array.isArray(parsed)) {
+          setFixedCategories(parsed);
+        }
+      } catch (e) {
+        console.error('Failed to parse fixed categories in handleUpdateConfig:', e);
+      }
+    }
   };
 
   return (
@@ -915,6 +1242,9 @@ export default function App() {
               onUpdateVaultName={(name) => handleUpdateConfig('active_vault_name', name)}
               currentLedgerBalance={Math.round(parseFloat(creationBalance || '0') * 100)}
               ledgerCreatedAt={ledgerCreatedAt}
+              fixedCategories={fixedCategories}
+              onViewReservesFlow={() => setView('reserves-flow')}
+              onViewReservesMap={() => setView('reserves-map')}
             />
           </motion.div>
         )}
@@ -949,6 +1279,10 @@ export default function App() {
               keepCloudVaultLocal={keepCloudVaultLocal}
               connectedGoogleUser={connectedGoogleUser}
               activeVaultName={activeVaultName}
+              transactions={transactions}
+              onUpdateTransaction={handleUpdateTransaction}
+              onDeleteTransactions={handleDeleteTransactions}
+              addToast={addToast}
             />
           </motion.div>
         )}
@@ -989,6 +1323,42 @@ export default function App() {
             />
           </motion.div>
         )}
+
+        {state.view === 'reserves-flow' && (
+          <motion.div key="reserves-flow" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <ReservesFlowView 
+              transactions={transactions}
+              onBack={() => setView('dashboard')}
+              onUpdateTransaction={handleUpdateTransaction}
+              onUpdateConfig={handleUpdateConfig}
+              currency={currency}
+              thousandsSeparator={thousandsSeparator}
+              dateFormat={dateFormat}
+              timezone={timezone}
+              currentLedgerBalance={Math.round(parseFloat(creationBalance || '0') * 100)}
+              ledgerCreatedAt={ledgerCreatedAt}
+              fixedCategories={fixedCategories}
+              activeVaultName={activeVaultName}
+            />
+          </motion.div>
+        )}
+
+        {state.view === 'reserves-map' && (
+          <motion.div key="reserves-map" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <ReservesMapView 
+              transactions={transactions}
+              onBack={() => setView('dashboard')}
+              currency={currency}
+              thousandsSeparator={thousandsSeparator}
+              dateFormat={dateFormat}
+              timezone={timezone}
+              currentLedgerBalance={Math.round(parseFloat(creationBalance || '0') * 100)}
+              ledgerCreatedAt={ledgerCreatedAt}
+              fixedCategories={fixedCategories}
+              activeVaultName={activeVaultName}
+            />
+          </motion.div>
+        )}
       </AnimatePresence>
 
       <ManualExpenseModal
@@ -1007,6 +1377,52 @@ export default function App() {
         transactions={transactions}
         timezone={timezone}
       />
+
+      {/* Toast Notification Layer */}
+      <div className="fixed top-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none max-w-sm w-full">
+        <AnimatePresence>
+          {toasts.map(toast => {
+            let Icon = Info;
+            let iconColor = 'text-ocean-blue';
+            let bgBorder = 'bg-surface-container/95 border-white/5';
+            if (toast.type === 'success') {
+              Icon = CheckCircle;
+              iconColor = 'text-nature-green';
+            } else if (toast.type === 'error') {
+              Icon = AlertCircle;
+              iconColor = 'text-earth-clay';
+            } else if (toast.type === 'warning') {
+              Icon = AlertTriangle;
+              iconColor = 'text-sand-gold';
+            }
+            
+            return (
+              <motion.div
+                key={toast.id}
+                initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9, y: -10 }}
+                transition={{ duration: 0.25 }}
+                className={cn(
+                  "pointer-events-auto flex items-center gap-3 px-4 py-3.5 rounded-2xl border backdrop-blur-md shadow-2xl",
+                  bgBorder
+                )}
+              >
+                <Icon className={cn("w-5 h-5 shrink-0", iconColor)} />
+                <span className="text-xs text-on-surface font-mono font-medium flex-grow leading-relaxed">
+                  {toast.message}
+                </span>
+                <button
+                  onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
+                  className="p-1 rounded-full hover:bg-white/5 text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer shrink-0"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
