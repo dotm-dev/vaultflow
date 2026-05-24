@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Settings, LogOut, ArrowUp, ArrowDown, Plus, Download, Sun, Moon, Utensils, Car, Zap, ShoppingBag, Gamepad2, Home, Heart, MoreHorizontal as OtherIcon, FileText, Shield, Lock, Code, X, CloudUpload, Edit2, DollarSign } from 'lucide-react';
+import { Settings, LogOut, ArrowUp, ArrowDown, Plus, Download, Sun, Moon, Utensils, Car, Zap, ShoppingBag, Gamepad2, Home, Heart, MoreHorizontal as OtherIcon, FileText, Shield, Lock, Code, X, CloudUpload, Edit2, DollarSign, Menu } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 import { cn } from '@/src/lib/utils';
 import { Transaction } from '../types';
@@ -51,6 +51,7 @@ export default function DashboardView({
   activeVaultName,
   onUpdateVaultName
 }: DashboardViewProps) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeModal, setActiveModal] = useState<'docs' | 'security' | 'manifest' | 'source' | null>(null);
   const { categories, isLoading: isCategoriesLoading } = useCategories();
   const [chartRange, setChartRange] = useState<'1M' | '3M' | '6M' | '1Y'>('1M');
@@ -190,14 +191,20 @@ export default function DashboardView({
             <span className="text-xl font-medium text-nature-green hover:opacity-80 transition-opacity duration-300">
               VaultFlow
             </span>
-            <div className={cn("px-2 py-0.5 rounded flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest border", isCloudConnected ? "bg-ocean-blue/10 text-ocean-blue border-ocean-blue/20" : "bg-earth-clay/10 text-earth-clay border-earth-clay/20")}>
+            <div className={cn("hidden sm:flex px-2 py-0.5 rounded items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest border shrink-0", isCloudConnected ? "bg-ocean-blue/10 text-ocean-blue border-ocean-blue/20" : "bg-earth-clay/10 text-earth-clay border-earth-clay/20")}>
               {isCloudConnected ? <CloudUpload className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
               {isCloudConnected ? 'Cloud Synced' : 'Local Only'}
+            </div>
+            <div 
+              className={cn("flex sm:hidden p-1 rounded border shrink-0", isCloudConnected ? "bg-ocean-blue/10 text-ocean-blue border-ocean-blue/20" : "bg-earth-clay/10 text-earth-clay border-earth-clay/20")}
+              title={isCloudConnected ? 'Cloud Synced' : 'Local Only'}
+            >
+              {isCloudConnected ? <CloudUpload className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
             </div>
           </div>
 
           {/* Middle Side: Ledger Name */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center z-10">
+          <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center justify-center z-10">
             {isEditingName ? (
               <input
                 type="text"
@@ -243,8 +250,8 @@ export default function DashboardView({
             )}
           </div>
 
-          {/* Right Side: Buttons */}
-          <div className="flex items-center gap-2">
+          {/* Right Side: Buttons (Desktop) */}
+          <div className="hidden md:flex items-center gap-2">
             <button onClick={onExpectedBudget} className="px-4.5 h-9 rounded-full flex items-center justify-center text-[10px] font-bold uppercase tracking-widest bg-ocean-blue/15 text-ocean-blue border border-ocean-blue/30 hover:bg-ocean-blue/25 hover:border-ocean-blue/40 hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-[0_0_15px_rgba(92,124,138,0.15)]" title="Open Monthly Expected Budget Planner">
               Planner
             </button>
@@ -274,7 +281,124 @@ export default function DashboardView({
               <LogOut className="w-4 h-4" />
             </button>
           </div>
+
+          {/* Right Side: Toggle Buttons (Mobile) */}
+          <div className="flex md:hidden items-center gap-1.5">
+            <button 
+              onClick={onToggleTheme} 
+              title={theme === 'light' ? "Switch to Dark Mode" : "Switch to Light Mode"}
+              className="w-9 h-9 rounded-full flex items-center justify-center text-on-surface-variant hover:text-nature-green hover:bg-white/5 transition-all cursor-pointer"
+            >
+              {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+            </button>
+            <button 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+              title="Toggle Menu"
+              className="w-9 h-9 rounded-full flex items-center justify-center text-on-surface-variant hover:text-nature-green hover:bg-white/5 transition-all cursor-pointer"
+            >
+              {isMobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="md:hidden w-full bg-surface-dark/95 border-b border-white/5 backdrop-blur-xl overflow-hidden"
+            >
+              <div className="px-6 py-5 flex flex-col gap-5 max-w-md mx-auto">
+                {/* Ledger Name Row */}
+                <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant font-mono">Ledger Name</span>
+                  {isEditingName ? (
+                    <input
+                      type="text"
+                      value={tempName}
+                      onChange={(e) => setTempName(e.target.value)}
+                      onBlur={handleSaveName}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSaveName();
+                        if (e.key === 'Escape') {
+                          setTempName(activeVaultName);
+                          setIsEditingName(false);
+                        }
+                      }}
+                      autoFocus
+                      className="bg-white/5 border border-nature-green/30 rounded px-2.5 py-1 text-xs text-on-surface focus:outline-none focus:border-nature-green/50 max-w-[150px] font-mono text-center"
+                    />
+                  ) : (
+                    <div 
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsEditingName(true); } }}
+                      onClick={() => setIsEditingName(true)}
+                      className="flex items-center gap-1.5 bg-white/[0.02] border border-white/5 px-3 py-1 rounded-full hover:bg-white/5 hover:border-nature-green/20 transition-all cursor-pointer select-none"
+                    >
+                      <span className="text-xs font-mono font-bold tracking-wider uppercase text-on-surface-variant hover:text-on-surface truncate max-w-[140px] leading-none">
+                        {activeVaultName}
+                      </span>
+                      <Edit2 className="w-3 h-3 text-on-surface-variant" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Sync Badge Row */}
+                <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant font-mono">Sync Status</span>
+                  <div className={cn("px-2 py-0.5 rounded flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest border shrink-0", isCloudConnected ? "bg-ocean-blue/10 text-ocean-blue border-ocean-blue/20" : "bg-earth-clay/10 text-earth-clay border-earth-clay/20")}>
+                    {isCloudConnected ? <CloudUpload className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+                    {isCloudConnected ? 'Cloud Synced' : 'Local Only'}
+                  </div>
+                </div>
+
+                {/* Actions Grid */}
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <button 
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      onExpectedBudget();
+                    }}
+                    className="h-10 rounded-xl flex items-center justify-center text-[10px] font-bold uppercase tracking-widest bg-ocean-blue/15 text-ocean-blue border border-ocean-blue/30 hover:bg-ocean-blue/25 hover:border-ocean-blue/40 transition-all cursor-pointer"
+                  >
+                    Planner
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      onSetBudget();
+                    }}
+                    className="h-10 rounded-xl flex items-center justify-center text-[10px] font-bold uppercase tracking-widest bg-nature-green/15 text-nature-green border border-nature-green/30 hover:bg-nature-green/25 hover:border-nature-green/40 transition-all cursor-pointer"
+                  >
+                    Budgets
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      onSettings();
+                    }}
+                    className="h-10 rounded-xl flex items-center justify-center text-[10px] font-bold uppercase tracking-widest bg-white/5 text-on-surface-variant border border-white/10 hover:bg-white/10 hover:text-on-surface transition-all cursor-pointer"
+                  >
+                    Settings
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      onLock();
+                    }}
+                    className="h-10 rounded-xl flex items-center justify-center text-[10px] font-bold uppercase tracking-widest bg-white/5 text-earth-clay border border-earth-clay/20 hover:bg-earth-clay/15 transition-all cursor-pointer"
+                  >
+                    Lock
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
       {/* Main Flow */}

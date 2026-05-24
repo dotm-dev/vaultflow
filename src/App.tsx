@@ -29,7 +29,7 @@ export default function App() {
   // Global Theme State
   const [themeSetting, setThemeSetting] = useState<'light' | 'dark' | 'system'>(() => {
     const saved = localStorage.getItem('vaultflow_theme');
-    return (saved === 'light' || saved === 'dark' || saved === 'system') ? saved : 'system';
+    return (saved === 'light' || saved === 'dark' || saved === 'system') ? saved : 'light';
   });
 
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');

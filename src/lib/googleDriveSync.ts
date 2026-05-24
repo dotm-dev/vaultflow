@@ -208,9 +208,13 @@ async function driveHeaders(): Promise<HeadersInit> {
  * Search for a file by exact name in Google Drive.
  * Returns the file ID if found, null otherwise.
  */
-async function searchDriveFile(name: string): Promise<string | null> {
+async function searchDriveFile(name: string, parentId?: string): Promise<string | null> {
   const headers = await driveHeaders();
-  const q = encodeURIComponent(`name='${name}' and trashed=false`);
+  let query = `name='${name}' and trashed=false`;
+  if (parentId) {
+    query += ` and '${parentId}' in parents`;
+  }
+  const q = encodeURIComponent(query);
   const res = await fetch(
     `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)&spaces=drive`,
     { headers }
@@ -224,6 +228,69 @@ async function searchDriveFile(name: string): Promise<string | null> {
   }
   const data = await res.json();
   return data.files?.length > 0 ? data.files[0].id : null;
+}
+
+/**
+ * Helper to find or create a folder in Google Drive.
+ * If parentId is omitted, resolves folder under the root.
+ */
+async function getOrCreateFolder(name: string, parentId?: string): Promise<string> {
+  const headers = await driveHeaders();
+  let query = `mimeType='application/vnd.google-apps.folder' and name='${name}' and trashed=false`;
+  if (parentId) {
+    query += ` and '${parentId}' in parents`;
+  } else {
+    query += ` and 'root' in parents`;
+  }
+  const q = encodeURIComponent(query);
+  const res = await fetch(
+    `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)&spaces=drive`,
+    { headers }
+  );
+  if (res.status === 401) {
+    clearAccessToken();
+    throw new Error('UNAUTHORIZED: Google session expired. Please sign in again.');
+  }
+  if (!res.ok) {
+    throw new Error(`Google Drive folder search failed (${res.status})`);
+  }
+  const data = await res.json();
+  if (data.files?.length > 0) {
+    return data.files[0].id;
+  }
+
+  // Create the folder
+  const token = getAccessToken();
+  if (!token) throw new Error('UNAUTHORIZED');
+  const metadata: any = {
+    name,
+    mimeType: 'application/vnd.google-apps.folder',
+  };
+  if (parentId) {
+    metadata.parents = [parentId];
+  } else {
+    metadata.parents = ['root'];
+  }
+  const createRes = await fetch(
+    'https://www.googleapis.com/drive/v3/files?fields=id',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(metadata),
+    }
+  );
+  if (createRes.status === 401) {
+    clearAccessToken();
+    throw new Error('UNAUTHORIZED');
+  }
+  if (!createRes.ok) {
+    throw new Error(`Google Drive folder creation failed (${createRes.status})`);
+  }
+  const createData = await createRes.json();
+  return createData.id;
 }
 
 /**
@@ -249,11 +316,14 @@ async function downloadDriveFile<T>(fileId: string): Promise<T> {
  * Create a new JSON file in Google Drive.
  * Returns the new file's ID.
  */
-async function createDriveFile(name: string, content: any): Promise<string> {
+async function createDriveFile(name: string, content: any, parentId?: string): Promise<string> {
   const token = getAccessToken();
   if (!token) throw new Error('UNAUTHORIZED');
 
-  const metadata = { name, mimeType: 'application/json' };
+  const metadata: any = { name, mimeType: 'application/json' };
+  if (parentId) {
+    metadata.parents = [parentId];
+  }
   const form = new FormData();
   form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
   form.append('file', new Blob([JSON.stringify(content)], { type: 'application/json' }));
@@ -317,15 +387,16 @@ function vaultFilename(vaultId: string): string {
  * Creates an empty one if it doesn't exist yet.
  */
 export async function getCloudManifest(email: string): Promise<VaultManifest> {
-  // email parameter kept for API compatibility; file is per-account via OAuth token
   void email;
-  const fileId = await searchDriveFile(MANIFEST_FILENAME);
-  if (!fileId) {
-    return { vaults: [] };
-  }
   try {
+    const folderId = await getOrCreateFolder('vaultflow');
+    const fileId = await searchDriveFile(MANIFEST_FILENAME, folderId);
+    if (!fileId) {
+      return { vaults: [] };
+    }
     return await downloadDriveFile<VaultManifest>(fileId);
-  } catch {
+  } catch (err) {
+    console.error('getCloudManifest failed:', err);
     return { vaults: [] };
   }
 }
@@ -336,11 +407,12 @@ export async function getCloudManifest(email: string): Promise<VaultManifest> {
  */
 export async function saveCloudManifest(email: string, manifest: VaultManifest): Promise<void> {
   void email;
-  const fileId = await searchDriveFile(MANIFEST_FILENAME);
+  const folderId = await getOrCreateFolder('vaultflow');
+  const fileId = await searchDriveFile(MANIFEST_FILENAME, folderId);
   if (fileId) {
     await updateDriveFile(fileId, manifest);
   } else {
-    await createDriveFile(MANIFEST_FILENAME, manifest);
+    await createDriveFile(MANIFEST_FILENAME, manifest, folderId);
   }
 }
 
@@ -349,14 +421,17 @@ export async function saveCloudManifest(email: string, manifest: VaultManifest):
  */
 export async function getCloudVaultData(email: string, vaultId: string): Promise<EncryptedVaultData> {
   void email;
-  const filename = vaultFilename(vaultId);
-  const fileId = await searchDriveFile(filename);
-  if (!fileId) {
-    return { transactions: [] };
-  }
   try {
+    const mainFolderId = await getOrCreateFolder('vaultflow');
+    const ledgerFolderId = await getOrCreateFolder(`ledger_${vaultId}`, mainFolderId);
+    const filename = vaultFilename(vaultId);
+    const fileId = await searchDriveFile(filename, ledgerFolderId);
+    if (!fileId) {
+      return { transactions: [] };
+    }
     return await downloadDriveFile<EncryptedVaultData>(fileId);
-  } catch {
+  } catch (err) {
+    console.error('getCloudVaultData failed:', err);
     return { transactions: [] };
   }
 }
@@ -366,11 +441,13 @@ export async function getCloudVaultData(email: string, vaultId: string): Promise
  */
 export async function saveCloudVaultData(email: string, vaultId: string, data: EncryptedVaultData): Promise<void> {
   void email;
+  const mainFolderId = await getOrCreateFolder('vaultflow');
+  const ledgerFolderId = await getOrCreateFolder(`ledger_${vaultId}`, mainFolderId);
   const filename = vaultFilename(vaultId);
-  const fileId = await searchDriveFile(filename);
+  const fileId = await searchDriveFile(filename, ledgerFolderId);
   if (fileId) {
     await updateDriveFile(fileId, data);
   } else {
-    await createDriveFile(filename, data);
+    await createDriveFile(filename, data, ledgerFolderId);
   }
 }
