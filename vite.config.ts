@@ -8,6 +8,7 @@ dns.setDefaultResultOrder('verbatim');
 
 export default defineConfig(({mode}) => {
   return {
+    base: './',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
