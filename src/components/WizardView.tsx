@@ -4,7 +4,7 @@ import React, { useState, useRef } from 'react';
 import { cn } from '@/src/lib/utils';
 import { deriveEncryptionKey, hashPasswordForChallenge, encryptPayload, decryptPayload, generateSalt, bytesToHex, hexToBytes } from '../lib/crypto';
 import { saveConfig, getConfig, saveEncryptedTransaction, clearAllLocalData } from '../lib/db';
-import { signInWithGoogle, getCloudManifest, saveCloudManifest, getCloudVaultData, saveCloudVaultData, VaultProfile, GoogleUser } from '../lib/googleDriveSync';
+import { signInWithGoogle, signOutGoogle, getCloudManifest, saveCloudManifest, getCloudVaultData, saveCloudVaultData, VaultProfile, GoogleUser, isGoogleConnected, getConnectedGoogleUser } from '../lib/googleDriveSync';
 import { parseCSVStatement } from '../lib/csv';
 import { Transaction } from '../types';
 
@@ -62,15 +62,24 @@ export default function WizardView({ onComplete, onCancel }: WizardViewProps) {
 
   React.useEffect(() => {
     async function loadGoogleUser() {
+      setIsLoadingCloud(true);
       try {
-        const storedGoogleUser = await getConfig('google_user');
-        if (storedGoogleUser) {
-          setGoogleUser(storedGoogleUser);
-          const manifest = await getCloudManifest(storedGoogleUser.email);
+        let user = await getConfig('google_user');
+        if (!user && isGoogleConnected()) {
+          user = await getConnectedGoogleUser();
+          if (user) {
+            await saveConfig('google_user', user);
+          }
+        }
+        if (user) {
+          setGoogleUser(user);
+          const manifest = await getCloudManifest(user.email);
           setCloudVaults(manifest.vaults);
         }
       } catch (err) {
         console.error('Failed to load Google user in Wizard:', err);
+      } finally {
+        setIsLoadingCloud(false);
       }
     }
     loadGoogleUser();
@@ -206,7 +215,7 @@ export default function WizardView({ onComplete, onCancel }: WizardViewProps) {
       setStep(3);
     } else if (step === 3) {
       // Store backup configurations
-      await saveConfig('starting_balance', startingBalance);
+      await saveConfig('creation_balance', startingBalance);
       await saveConfig('backup_enabled', autoSync);
       await saveConfig('backup_interval', 60000);
       await saveConfig('keep_cloud_vault_local', false);
@@ -217,6 +226,7 @@ export default function WizardView({ onComplete, onCancel }: WizardViewProps) {
       // Finalize Onboarding Setup
       setIsFinishing(true);
       await saveConfig('ai_consent', aiConsent);
+      await saveConfig('ledger_created_at', Date.now());
 
       try {
         setFinishProgress('Encrypting database ledger...');
@@ -271,20 +281,6 @@ export default function WizardView({ onComplete, onCancel }: WizardViewProps) {
           }
 
           finalTransactions.push(...listToSave);
-        }
-
-        const startingAmount = parseFloat(startingBalance);
-        if (!isNaN(startingAmount) && startingAmount > 0) {
-          finalTransactions.push({
-            id: crypto.randomUUID(),
-            booking_date: Date.now(),
-            amount: Math.round(startingAmount * 100),
-            currency: currency,
-            counterparty: 'Initial Balance',
-            category_id: 'income',
-            type: 'income',
-            raw_data: 'Manual Initial Balance Setup',
-          });
         }
 
         if (derivedKey) {
@@ -434,9 +430,11 @@ export default function WizardView({ onComplete, onCancel }: WizardViewProps) {
                     )}
                     <span className="text-[10px] font-mono text-nature-green font-bold truncate max-w-[80px]">{googleUser.name}</span>
                     <button
-                      onClick={() => {
+                      onClick={async () => {
+                        signOutGoogle();
                         setGoogleUser(null);
                         setCloudVaults([]);
+                        await saveConfig('google_user', null);
                       }}
                       className="text-[9px] font-mono uppercase tracking-wider text-earth-clay hover:underline cursor-pointer"
                     >
@@ -678,7 +676,7 @@ export default function WizardView({ onComplete, onCancel }: WizardViewProps) {
                   <Shield className="w-9 h-9 text-nature-green fill-nature-green/20" />
                 </div>
                 <h1 className="text-2xl md:text-3xl font-bold text-on-surface tracking-tight">Ledger Backup</h1>
-                <p className="text-on-surface-variant">Configure initial balance and secure cloud synchronization.</p>
+                <p className="text-on-surface-variant">Configure current ledger balance and secure cloud synchronization.</p>
               </div>
             </header>
 
@@ -686,7 +684,7 @@ export default function WizardView({ onComplete, onCancel }: WizardViewProps) {
               <div className="relative group">
                 <div className="absolute inset-0 glass-card rounded-2xl transition-colors group-hover:border-nature-green/30 focus-within:border-nature-green/50" />
                 <div className="relative flex flex-col p-5 gap-1.5">
-                  <label className="text-[10px] uppercase font-bold text-on-surface-variant tracking-wider font-mono">Starting Income / Balance</label>
+                  <label className="text-[10px] uppercase font-bold text-on-surface-variant tracking-wider font-mono">Current Ledger Balance</label>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-on-surface-variant font-mono">{currency}</span>
                     <input 

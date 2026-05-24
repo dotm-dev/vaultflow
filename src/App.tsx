@@ -14,7 +14,7 @@ import { AppState, AppView, Transaction } from './types';
 import { AnimatePresence, motion } from 'motion/react';
 import { getConfig, getAllEncryptedTransactions, saveEncryptedTransaction, saveConfig, clearAllLocalData, clearLocalVaultCache } from './lib/db';
 import { deriveEncryptionKey, decryptPayload, encryptPayload, hashPasswordForChallenge, hexToBytes } from './lib/crypto';
-import { getCloudManifest, saveCloudManifest, saveCloudVaultData, getCloudVaultData } from './lib/googleDriveSync';
+import { getCloudManifest, saveCloudManifest, saveCloudVaultData, getCloudVaultData, isGoogleConnected, getConnectedGoogleUser } from './lib/googleDriveSync';
 import { RefreshCw } from 'lucide-react';
 
 export default function App() {
@@ -84,6 +84,8 @@ export default function App() {
   const [activeVaultName, setActiveVaultName] = useState<string>('Local Vault');
   const [activeVaultId, setActiveVaultId] = useState<string | null>(null);
   const [connectedGoogleUser, setConnectedGoogleUser] = useState<any | null>(null);
+  const [creationBalance, setCreationBalance] = useState<string>('0');
+  const [ledgerCreatedAt, setLedgerCreatedAt] = useState<number>(0);
   const [syncInterval, setSyncInterval] = useState<number>(() => {
     const saved = localStorage.getItem('vaultflow_sync_interval');
     return saved ? Number(saved) : 60000;
@@ -94,11 +96,30 @@ export default function App() {
   const [keepCloudVaultLocal, setKeepCloudVaultLocal] = useState<boolean>(false);
   const [lastSyncSuccess, setLastSyncSuccess] = useState<number | null>(null);
 
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsyncedChanges) {
+        e.preventDefault();
+        e.returnValue = ''; // Standard browser confirmation trigger
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [hasUnsyncedChanges]);
+
   // On-mount: check if a cryptographic vault exists
   useEffect(() => {
     async function checkInit() {
       try {
-        const storedGoogleUser = await getConfig('google_user');
+        let storedGoogleUser = await getConfig('google_user');
+        if (!storedGoogleUser && isGoogleConnected()) {
+          storedGoogleUser = await getConnectedGoogleUser();
+          if (storedGoogleUser) {
+            await saveConfig('google_user', storedGoogleUser);
+          }
+        }
         const keepLocal = await getConfig('keep_cloud_vault_local');
         
         // If a cloud connection exists, but we choose not to keep a local copy,
@@ -123,6 +144,8 @@ export default function App() {
         const storedHasUnsynced = await getConfig('has_unsynced_changes');
         const storedBackupEnabled = await getConfig('backup_enabled');
         const storedLastSync = await getConfig('last_synced_at');
+        const storedCreationBalance = await getConfig('creation_balance');
+        const storedLedgerCreatedAt = await getConfig('ledger_created_at');
         
         if (storedCurrency) setCurrency(storedCurrency);
         if (storedSeparator !== undefined && storedSeparator !== null) setThousandsSeparator(storedSeparator);
@@ -132,6 +155,8 @@ export default function App() {
         if (storedVaultId) setActiveVaultId(storedVaultId);
         if (storedVaultName) setActiveVaultName(storedVaultName);
         if (storedGoogleUser) setConnectedGoogleUser(storedGoogleUser);
+        if (storedCreationBalance) setCreationBalance(storedCreationBalance);
+        if (storedLedgerCreatedAt) setLedgerCreatedAt(Number(storedLedgerCreatedAt));
         // Note: syncInterval is a local user preference stored in localStorage,
         // already initialized from useState. We do NOT override it from IndexedDB.
         if (storedHasUnsynced !== undefined) setHasUnsyncedChanges(!!storedHasUnsynced);
@@ -203,7 +228,9 @@ export default function App() {
           backup_enabled: backupEnabled,
           keep_cloud_vault_local: keepCloudVaultLocal,
           timezone,
-          language
+          language,
+          creation_balance: creationBalance,
+          ledger_created_at: ledgerCreatedAt
         }
       };
 
@@ -304,6 +331,8 @@ export default function App() {
     const storedGoogleUser = await getConfig('google_user');
     const storedVaultName = await getConfig('active_vault_name');
     const storedVaultId = await getConfig('active_vault_id');
+    const storedCreationBalance = await getConfig('creation_balance');
+    const storedLedgerCreatedAt = await getConfig('ledger_created_at');
 
     if (storedCurrency) setCurrency(storedCurrency);
     if (storedSeparator !== undefined && storedSeparator !== null) setThousandsSeparator(storedSeparator);
@@ -311,6 +340,8 @@ export default function App() {
     if (storedGoogleUser) setConnectedGoogleUser(storedGoogleUser);
     if (storedVaultName) setActiveVaultName(storedVaultName);
     if (storedVaultId) setActiveVaultId(storedVaultId);
+    if (storedCreationBalance) setCreationBalance(storedCreationBalance);
+    if (storedLedgerCreatedAt) setLedgerCreatedAt(Number(storedLedgerCreatedAt));
     // syncInterval is a local user preference (localStorage), not overridden from IndexedDB.
     
     await saveConfig('has_unsynced_changes', false);
@@ -419,6 +450,16 @@ export default function App() {
         hasData: false,
       }));
     }
+  };
+
+  const handleLockSession = () => {
+    if (hasUnsyncedChanges) {
+      const confirmLock = confirm(
+        "⚠️ WARNING: You have unsaved (unsynced) local changes.\n\nLocking your session now may cause you to lose these changes if local caching is disabled, or they won't be saved to the cloud.\n\nAre you sure you want to proceed?"
+      );
+      if (!confirmLock) return;
+    }
+    window.location.reload();
   };
 
   const handleCreateNewLedger = async () => {
@@ -550,9 +591,13 @@ export default function App() {
     const storedSaltHex = await getConfig('encryption_salt');
     const storedChallenge = await getConfig('challenge_hash');
     const storedGoogleUser = await getConfig('google_user');
+    const storedCreationBalance = await getConfig('creation_balance');
+    const storedLedgerCreatedAt = await getConfig('ledger_created_at');
     if (storedSaltHex) setSalt(hexToBytes(storedSaltHex));
     if (storedChallenge) setChallengeHash(storedChallenge);
     if (storedGoogleUser) setConnectedGoogleUser(storedGoogleUser);
+    if (storedCreationBalance) setCreationBalance(storedCreationBalance);
+    if (storedLedgerCreatedAt) setLedgerCreatedAt(Number(storedLedgerCreatedAt));
 
     setIsLocked(false);
     setState(prev => ({
@@ -659,6 +704,8 @@ export default function App() {
       keep_cloud_vault_local?: boolean;
       timezone?: string;
       language?: string;
+      creation_balance?: string;
+      ledger_created_at?: number;
     },
     lastSaved: number
   ): Promise<boolean> => {
@@ -724,9 +771,13 @@ export default function App() {
       // syncInterval is a local user preference (localStorage), not overridden from cloud config.
       const backupEnabledVal = config.backup_enabled !== undefined ? config.backup_enabled : true;
       const keepLocalVal = config.keep_cloud_vault_local !== undefined ? config.keep_cloud_vault_local : false;
+      const targetCreationBalance = config.creation_balance || '0';
+      const targetLedgerCreatedAt = config.ledger_created_at || Date.now();
 
       await saveConfig('backup_enabled', backupEnabledVal);
       await saveConfig('keep_cloud_vault_local', keepLocalVal);
+      await saveConfig('creation_balance', targetCreationBalance);
+      await saveConfig('ledger_created_at', targetLedgerCreatedAt);
 
       // 5. Update root state
       setSalt(saltBytes);
@@ -742,6 +793,8 @@ export default function App() {
       setLanguage(targetLanguage);
       setBackupEnabled(backupEnabledVal);
       setKeepCloudVaultLocal(keepLocalVal);
+      setCreationBalance(targetCreationBalance);
+      setLedgerCreatedAt(Number(targetLedgerCreatedAt));
       setHasUnsyncedChanges(false);
       setLastSyncSuccess(lastSaved);
 
@@ -777,6 +830,8 @@ export default function App() {
     if (key === 'last_synced_at') setLastSyncSuccess(value);
     if (key === 'timezone') setTimezone(value);
     if (key === 'language') setLanguage(value);
+    if (key === 'creation_balance') setCreationBalance(value);
+    if (key === 'ledger_created_at') setLedgerCreatedAt(Number(value));
   };
 
   return (
@@ -825,7 +880,7 @@ export default function App() {
               onConfigureBackup={() => setView('settings')}
               onSettings={() => setView('settings')}
               onExpectedBudget={() => setView('expected-budget')}
-              onLock={() => window.location.reload()}
+              onLock={handleLockSession}
               theme={resolvedTheme}
               onToggleTheme={handleToggleTheme}
               currency={currency}
@@ -849,7 +904,7 @@ export default function App() {
               onSettings={() => setView('settings')}
               onSetBudget={() => setView('budget')}
               onExpectedBudget={() => setView('expected-budget')}
-              onLock={() => window.location.reload()}
+              onLock={handleLockSession}
               onViewCategory={(catId) => setState(prev => ({ ...prev, view: 'category-details', activeCategory: catId }))}
               currency={currency}
               thousandsSeparator={thousandsSeparator}
@@ -858,6 +913,8 @@ export default function App() {
               isCloudConnected={!!connectedGoogleUser}
               activeVaultName={activeVaultName}
               onUpdateVaultName={(name) => handleUpdateConfig('active_vault_name', name)}
+              currentLedgerBalance={Math.round(parseFloat(creationBalance || '0') * 100)}
+              ledgerCreatedAt={ledgerCreatedAt}
             />
           </motion.div>
         )}
@@ -947,6 +1004,8 @@ export default function App() {
         onClose={toggleImportModal}
         onImport={handleImportTransactions}
         currency={currency}
+        transactions={transactions}
+        timezone={timezone}
       />
     </div>
   );

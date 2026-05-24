@@ -451,3 +451,75 @@ export async function saveCloudVaultData(email: string, vaultId: string, data: E
     await createDriveFile(filename, data, ledgerFolderId);
   }
 }
+
+/**
+ * Delete a file or folder in Google Drive.
+ */
+async function deleteDriveFile(fileId: string): Promise<void> {
+  const token = getAccessToken();
+  if (!token) throw new Error('UNAUTHORIZED');
+
+  const res = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${fileId}`,
+    {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  if (res.status === 401) {
+    clearAccessToken();
+    throw new Error('UNAUTHORIZED');
+  }
+  if (!res.ok) {
+    throw new Error(`Google Drive file deletion failed (${res.status})`);
+  }
+}
+
+/**
+ * Deletes a vault's folder and removes it from the manifest.
+ */
+export async function deleteCloudVault(email: string, vaultId: string): Promise<void> {
+  const mainFolderId = await getOrCreateFolder('vaultflow');
+  
+  // 1. Find and delete the ledger folder (e.g. ledger_${vaultId})
+  const folderName = `ledger_${vaultId}`;
+  const ledgerFolderId = await searchDriveFile(folderName, mainFolderId);
+  if (ledgerFolderId) {
+    await deleteDriveFile(ledgerFolderId);
+  }
+
+  // 2. Remove from the manifest
+  const manifest = await getCloudManifest(email);
+  const updatedVaults = manifest.vaults.filter(v => v.id !== vaultId);
+  await saveCloudManifest(email, { vaults: updatedVaults });
+}
+
+/**
+ * Fetches the connected user profile from Google using the active session token.
+ */
+export async function getConnectedGoogleUser(): Promise<GoogleUser | null> {
+  const token = getAccessToken();
+  if (!token) return null;
+
+  try {
+    const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      if (res.status === 401) {
+        clearAccessToken();
+      }
+      return null;
+    }
+    const profile = await res.json();
+    return {
+      email: profile.email,
+      name: profile.name || profile.email,
+      avatar: profile.picture || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(profile.email)}`,
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+

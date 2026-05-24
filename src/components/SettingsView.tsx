@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, RefreshCw, CheckCircle, Download, Trash2, Shield, Moon, Sun, Coins, Hash, Calendar, Cloud, Database, User, Lock, Eye, EyeOff, AlertCircle, X, ArrowRight, Sparkles, Settings, Clock, Globe } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { getConfig, saveConfig } from '../lib/db';
-import { signInWithGoogle, signOutGoogle, getCloudManifest, isGoogleConnected, GoogleUser, VaultProfile } from '../lib/googleDriveSync';
+import { signInWithGoogle, signOutGoogle, getCloudManifest, isGoogleConnected, GoogleUser, VaultProfile, deleteCloudVault } from '../lib/googleDriveSync';
 import { hashPasswordForChallenge, hexToBytes } from '../lib/crypto';
 import { formatDate, formatTime } from '../lib/formatters';
 
@@ -89,6 +89,7 @@ export default function SettingsView({
   const [isSwitching, setIsSwitching] = useState(false);
   const [syncBeforeSwitch, setSyncBeforeSwitch] = useState(true);
   const [isLinkingSyncing, setIsLinkingSyncing] = useState(false);
+  const [isDeletingVaultId, setIsDeletingVaultId] = useState<string | null>(null);
 
   const switchPasswordRef = useRef<HTMLInputElement>(null);
 
@@ -272,6 +273,34 @@ export default function SettingsView({
       setSwitchError('An error occurred during the vault switch.');
     } finally {
       setIsSwitching(false);
+    }
+  };
+
+  const handleDeleteCloudVault = async (vault: VaultProfile) => {
+    if (!connectedGoogleUser) return;
+    
+    const doubleConfirm = confirm(
+      `⚠️ WARNING: Deleting "${vault.name}" will PERMANENTLY delete the vault folder and all its backups from Google Drive.\n\nThis cannot be undone. Do you wish to continue?`
+    );
+    if (!doubleConfirm) return;
+
+    setIsDeletingVaultId(vault.id);
+    try {
+      await deleteCloudVault(connectedGoogleUser.email, vault.id);
+      
+      // Refresh manifest
+      const manifest = await getCloudManifest(connectedGoogleUser.email);
+      setCloudVaults(manifest.vaults);
+      setIsSessionExpired(false);
+    } catch (e: any) {
+      console.error('Failed to delete cloud vault:', e);
+      if (e.message && e.message.includes('UNAUTHORIZED')) {
+        setIsSessionExpired(true);
+      } else {
+        alert(`Failed to delete cloud vault: ${e.message || e}`);
+      }
+    } finally {
+      setIsDeletingVaultId(null);
     }
   };
 
@@ -740,6 +769,12 @@ export default function SettingsView({
                       <span className="text-xs font-mono font-bold text-nature-green">{activeVaultName}</span>
                       <button
                         onClick={async () => {
+                          if (hasUnsyncedChanges) {
+                            const confirmDisconnect = confirm(
+                              "⚠️ WARNING: You have unsaved (unsynced) local changes.\n\nDisconnecting your Google account now will stop these changes from being synchronized to your cloud backup.\n\nAre you sure you want to disconnect?"
+                            );
+                            if (!confirmDisconnect) return;
+                          }
                           signOutGoogle();
                           await onUpdateConfig('google_user', null);
                           await onUpdateConfig('active_vault_id', null);
@@ -923,12 +958,27 @@ export default function SettingsView({
                               </div>
                               
                               {!isActive && (
-                                <button
-                                  onClick={() => handleOpenSwitchModal(vault)}
-                                  className="w-full py-2 rounded-lg bg-ocean-blue/10 text-ocean-blue hover:bg-ocean-blue/20 text-[10px] font-mono font-bold uppercase tracking-wider transition-colors shrink-0 cursor-pointer text-center"
-                                >
-                                  Activate Vault
-                                </button>
+                                <div className="flex gap-2 w-full">
+                                  <button
+                                    onClick={() => handleOpenSwitchModal(vault)}
+                                    disabled={isDeletingVaultId !== null || isSyncing || isSwitching}
+                                    className="flex-grow py-2 rounded-lg bg-ocean-blue/10 text-ocean-blue hover:bg-ocean-blue/20 disabled:opacity-50 disabled:cursor-not-allowed text-[10px] font-mono font-bold uppercase tracking-wider transition-colors shrink-0 cursor-pointer text-center"
+                                  >
+                                    Activate Vault
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteCloudVault(vault)}
+                                    disabled={isDeletingVaultId !== null || isSyncing || isSwitching}
+                                    className="px-3 rounded-lg bg-earth-clay/10 text-earth-clay hover:bg-earth-clay/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0 cursor-pointer flex items-center justify-center"
+                                    title="Delete Cloud Vault"
+                                  >
+                                    {isDeletingVaultId === vault.id ? (
+                                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                    ) : (
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    )}
+                                  </button>
+                                </div>
                               )}
                             </div>
                           );

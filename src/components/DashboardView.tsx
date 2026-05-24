@@ -28,6 +28,8 @@ interface DashboardViewProps {
   timezone: string;
   activeVaultName: string;
   onUpdateVaultName: (name: string) => Promise<void>;
+  currentLedgerBalance: number;
+  ledgerCreatedAt: number;
 }
 
 export default function DashboardView({ 
@@ -49,7 +51,9 @@ export default function DashboardView({
   timezone,
   isCloudConnected,
   activeVaultName,
-  onUpdateVaultName
+  onUpdateVaultName,
+  currentLedgerBalance,
+  ledgerCreatedAt
 }: DashboardViewProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeModal, setActiveModal] = useState<'docs' | 'security' | 'manifest' | 'source' | null>(null);
@@ -82,13 +86,34 @@ export default function DashboardView({
     source: { title: 'Open Source Assurance', subtitle: 'TRANSPARENT ARCHITECTURE AND BUILD VERIFICATION', icon: Code, color: 'text-nature-green', body: 'VaultFlow is engineered on open standard runtimes: React, Vite, Framer Motion, and Tailwind CSS. The code builds directly into client-side static bundles with no proprietary libraries.' }
   };
 
+  // Helper to dynamically calculate balance at a specific time `t`
+  const calculateBalanceAt = (
+    t: number,
+    currentLedgerBalance: number,
+    ledgerCreatedAt: number,
+    incomesList: Transaction[],
+    expensesList: Transaction[]
+  ): number => {
+    if (t >= ledgerCreatedAt) {
+      const incBetween = incomesList.filter(tx => tx.booking_date >= ledgerCreatedAt && tx.booking_date < t).reduce((sum, tx) => sum + tx.amount, 0);
+      const expBetween = expensesList.filter(tx => tx.booking_date >= ledgerCreatedAt && tx.booking_date < t).reduce((sum, tx) => sum + tx.amount, 0);
+      return currentLedgerBalance + incBetween - expBetween;
+    } else {
+      const incBetween = incomesList.filter(tx => tx.booking_date >= t && tx.booking_date < ledgerCreatedAt).reduce((sum, tx) => sum + tx.amount, 0);
+      const expBetween = expensesList.filter(tx => tx.booking_date >= t && tx.booking_date < ledgerCreatedAt).reduce((sum, tx) => sum + tx.amount, 0);
+      return currentLedgerBalance - incBetween + expBetween;
+    }
+  };
+
   // 1. Data Parsing & Splits
   const expenses = transactions.filter(t => t.type === 'expense');
   const incomes = transactions.filter(t => t.type === 'income');
 
   const totalExpensesCents = expenses.reduce((sum, t) => sum + t.amount, 0);
   const totalIncomesCents = incomes.reduce((sum, t) => sum + t.amount, 0);
-  const netReservesCents = totalIncomesCents - totalExpensesCents;
+  
+  // Available Reserves is dynamically calculated as the current balance
+  const netReservesCents = calculateBalanceAt(Infinity, currentLedgerBalance, ledgerCreatedAt, incomes, expenses);
 
   // 2. Pillars (Fixed vs Agile vs Retained)
   const FIXED_CATEGORIES = ['home', 'utilities', 'health'];
@@ -96,7 +121,7 @@ export default function DashboardView({
   const agileCents = totalExpensesCents - fixedCents;
   const retainedCents = Math.max(0, netReservesCents);
   
-  const totalBase = Math.max(totalIncomesCents, 1);
+  const totalBase = Math.max(netReservesCents + totalExpensesCents, 1);
   const fixedPercent = (fixedCents / totalBase) * 100;
   const agilePercent = (agileCents / totalBase) * 100;
   const retainedPercent = (retainedCents / totalBase) * 100;
@@ -119,9 +144,7 @@ export default function DashboardView({
           .filter(t => t.booking_date >= dayStart && t.booking_date < dayEnd)
           .reduce((sum, t) => sum + t.amount, 0) / 100;
       } else {
-        const incomesBefore = incomes.filter(t => t.booking_date < dayEnd).reduce((sum, t) => sum + t.amount, 0);
-        const expensesBefore = expenses.filter(t => t.booking_date < dayEnd).reduce((sum, t) => sum + t.amount, 0);
-        val = (incomesBefore - expensesBefore) / 100;
+        val = calculateBalanceAt(dayEnd, currentLedgerBalance, ledgerCreatedAt, incomes, expenses) / 100;
       }
       velocityData.push({ label: dateStr, value: val });
     }
@@ -140,9 +163,7 @@ export default function DashboardView({
           .filter(t => t.booking_date >= start && t.booking_date < end)
           .reduce((sum, t) => sum + t.amount, 0) / 100;
       } else {
-        const incomesBefore = incomes.filter(t => t.booking_date < end).reduce((sum, t) => sum + t.amount, 0);
-        const expensesBefore = expenses.filter(t => t.booking_date < end).reduce((sum, t) => sum + t.amount, 0);
-        val = (incomesBefore - expensesBefore) / 100;
+        val = calculateBalanceAt(end, currentLedgerBalance, ledgerCreatedAt, incomes, expenses) / 100;
       }
       velocityData.push({ label: weekStr, value: val });
     }
@@ -160,9 +181,7 @@ export default function DashboardView({
           .filter(t => t.booking_date >= monthStart && t.booking_date < monthEnd)
           .reduce((sum, t) => sum + t.amount, 0) / 100;
       } else {
-        const incomesBefore = incomes.filter(t => t.booking_date < monthEnd).reduce((sum, t) => sum + t.amount, 0);
-        const expensesBefore = expenses.filter(t => t.booking_date < monthEnd).reduce((sum, t) => sum + t.amount, 0);
-        val = (incomesBefore - expensesBefore) / 100;
+        val = calculateBalanceAt(monthEnd, currentLedgerBalance, ledgerCreatedAt, incomes, expenses) / 100;
       }
       velocityData.push({ label: monthStr, value: val });
     }
