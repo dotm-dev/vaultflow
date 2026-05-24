@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { 
   Utensils, Car, Zap, ShoppingBag, Gamepad2, Home, Heart, MoreHorizontal as OtherIcon, 
-  Tag, Briefcase, Coffee, Music, Plane, Cpu, Camera, Monitor, Smile, Bookmark, Star, Key, DollarSign
+  Tag, Briefcase, Coffee, Music, Plane, Cpu, Camera, Monitor, Smile, Bookmark, Star, Key, DollarSign,
+  ArrowUp, ArrowDown
 } from 'lucide-react';
 import { Category } from '../types';
 import { getConfig, saveConfig } from './db';
@@ -9,7 +10,8 @@ import { getConfig, saveConfig } from './db';
 // Map string identifiers to actual Lucide components
 export const ICON_MAP: Record<string, any> = {
   Utensils, Car, Zap, ShoppingBag, Gamepad2, Home, Heart, OtherIcon,
-  Tag, Briefcase, Coffee, Music, Plane, Cpu, Camera, Monitor, Smile, Bookmark, Star, Key, DollarSign
+  Tag, Briefcase, Coffee, Music, Plane, Cpu, Camera, Monitor, Smile, Bookmark, Star, Key, DollarSign,
+  ArrowUp, ArrowDown
 };
 
 export const COLOR_OPTIONS = [

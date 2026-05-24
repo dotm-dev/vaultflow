@@ -5,7 +5,7 @@ import { useCategories, ICON_MAP } from '../lib/categories';
 import { cn } from '@/src/lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { formatAmount, formatDate, formatTime, getTimezoneDateParts, getTimestampFromParts } from '../lib/formatters';
-import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip, ReferenceLine } from 'recharts';
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, ReferenceLine } from 'recharts';
 
 const COLOR_HEX_MAP: Record<string, string> = {
   'text-earth-clay': '#D9735A',
@@ -260,6 +260,13 @@ export default function CategoryDetailsView({
                   tickLine={false} 
                   axisLine={false} 
                   dy={10}
+                />
+                <YAxis
+                  hide
+                  domain={[0, (dataMax: number) => {
+                    const upperBound = Math.max(dataMax, budgetLimit);
+                    return Math.ceil(upperBound * 1.15);
+                  }]}
                 />
                 <Tooltip 
                   contentStyle={{ 

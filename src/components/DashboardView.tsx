@@ -18,6 +18,7 @@ interface DashboardViewProps {
   onToggleTheme: () => void;
   onSettings: () => void;
   onSetBudget: () => void;
+  onExpectedBudget: () => void;
   onLock: () => void;
   onViewCategory: (catId: string) => void;
   currency: string;
@@ -39,6 +40,7 @@ export default function DashboardView({
   onToggleTheme, 
   onSettings, 
   onSetBudget, 
+  onExpectedBudget,
   onLock, 
   onViewCategory, 
   currency,
@@ -243,6 +245,9 @@ export default function DashboardView({
 
           {/* Right Side: Buttons */}
           <div className="flex items-center gap-2">
+            <button onClick={onExpectedBudget} className="px-4.5 h-9 rounded-full flex items-center justify-center text-[10px] font-bold uppercase tracking-widest bg-ocean-blue/15 text-ocean-blue border border-ocean-blue/30 hover:bg-ocean-blue/25 hover:border-ocean-blue/40 hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-[0_0_15px_rgba(92,124,138,0.15)]" title="Open Monthly Expected Budget Planner">
+              Planner
+            </button>
             <button onClick={onSetBudget} className="px-4.5 h-9 rounded-full flex items-center justify-center text-[10px] font-bold uppercase tracking-widest bg-nature-green/15 text-nature-green border border-nature-green/30 hover:bg-nature-green/25 hover:border-nature-green/40 hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-[0_0_15px_rgba(123,160,91,0.15)]">
               Budgets
             </button>

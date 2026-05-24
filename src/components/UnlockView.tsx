@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Lock, Key, Upload, ArrowLeft, Eye, EyeOff, AlertCircle, RefreshCw, Cloud, HardDrive, ArrowRight, X } from 'lucide-react';
+import { Lock, Key, Upload, ArrowLeft, Eye, EyeOff, AlertCircle, RefreshCw, Cloud, HardDrive, ArrowRight, X, Plus } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { deriveEncryptionKey, hashPasswordForChallenge, decryptPayload, hexToBytes } from '../lib/crypto';
 import { clearAllLocalData, saveEncryptedTransaction, saveConfig, getConfig } from '../lib/db';
@@ -310,9 +310,29 @@ export default function UnlockView({
       }
       await new Promise(resolve => setTimeout(resolve, 400));
 
+      // 3.5. Decrypt and restore expected budget if present
       setRestoreProgress(90);
       setRestoreMessage('Restoring configurations...');
+      if (cloudData.expectedBudget) {
+        try {
+          const plaintext = await decryptPayload(
+            cloudData.expectedBudget.payload,
+            cloudData.expectedBudget.iv,
+            key
+          );
+          const parsed = JSON.parse(plaintext);
+          if (parsed && parsed.versions) {
+            await saveConfig('expected_budget_versions', JSON.stringify(parsed.versions));
+          }
+          if (parsed && parsed.activeVersionId) {
+            await saveConfig('active_expected_budget_version_id', parsed.activeVersionId);
+          }
+        } catch (e) {
+          console.error("Failed to decrypt expected budget from cloud:", e);
+        }
+      }
 
+      // 4. Save manifest profiles configuration locally
       await saveConfig('encryption_salt', selectedVault.salt);
       await saveConfig('challenge_hash', selectedVault.challenge);
       await saveConfig('google_user', googleUser);
@@ -622,6 +642,24 @@ export default function UnlockView({
                   Link local vault to this account instead
                 </button>
               </div>
+            )}
+
+            {/* Create New Empty Ledger option */}
+            {cloudVaults.length > 0 && (
+              <>
+                <div className="relative flex py-1 items-center">
+                  <div className="flex-grow border-t border-white/5"></div>
+                  <span className="flex-shrink mx-4 text-on-surface-variant/40 font-mono text-[9px] uppercase tracking-wider">or</span>
+                  <div className="flex-grow border-t border-white/5"></div>
+                </div>
+                <button
+                  onClick={onStartWizard}
+                  className="w-full h-10 rounded-xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-on-surface font-bold text-xs font-mono uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5 text-nature-green" />
+                  Create New Empty Ledger
+                </button>
+              </>
             )}
           </div>
         )}

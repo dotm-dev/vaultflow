@@ -1,0 +1,404 @@
+﻿Date from:;="01.01.2026"
+Date to:;="23.05.2026"
+Category:;="All"
+Account:;="CH2609000000650567717"
+Currency:;="CHF"
+
+Date;Type of transaction;Notification text;Credit in CHF;Debit in CHF;Tag;Category
+
+22.05.2026;Entry;"Acquisto/servizio del 22.05.2026, Coop-2448 Viganello";;-38.05;;Shopping // Supermarkets
+22.05.2026;Entry;"TWINT ricevimento di denaro da +41765413756";1300;;;Other incomings
+22.05.2026;Entry;"Acquisto/servizio del 22.05.2026, Coop-1383 Pregassona";;-20.5;;Shopping // Supermarkets
+22.05.2026;Entry;"Acquisto/servizio del 22.05.2026, ALDI Pregassona 60";;-2.15;;Shopping // Supermarkets
+22.05.2026;Entry;"Accredito di Scuola Universitaria Professionale";5465;;;Income
+21.05.2026;Entry;"Acquisto/servizio del 21.05.2026, Coop-1383 Pregassona";;-32.25;;Shopping // Supermarkets
+20.05.2026;Entry;"Acquisto/servizio del 20.05.2026, SV (Svizzera) SA";;-4.4;;Leisure // Food services
+19.05.2026;Entry;"Acquisto/servizio del 19.05.2026, Coop-2448 Viganello";;-8.65;;Shopping // Supermarkets
+18.05.2026;Entry;"Acquisto/servizio del 18.05.2026, Coop-1383 Pregassona";;-23.45;;Shopping // Supermarkets
+16.05.2026;Entry;"Acquisto/servizio del 16.05.2026, Ristorante Pizzeria del Sole";;-40;;Leisure // Food services
+16.05.2026;Entry;"Acquisto/servizio del 16.05.2026, Coop-2448 Viganello";;-102.1;;Shopping // Supermarkets
+16.05.2026;Entry;"Acquisto/servizio del 16.05.2026, Farmacia Coop Vitality";;-33.5;;Living // Healthcare
+16.05.2026;Entry;"Acquisto/servizio del 16.05.2026, NYX*MariaTheresiaGeros";;-6;;Mobility // Private transport
+16.05.2026;Entry;"Acquisto/servizio del 16.05.2026, Migros Take Away Cassarate";;-11.1;;Shopping // Supermarkets
+15.05.2026;Entry;"Acquisto/servizio del 15.05.2026, IKEA SA";;-139.85;;Residing // Furniture
+15.05.2026;Entry;"Acquisto/servizio del 15.05.2026, Coop-1383 Pregassona";;-13.6;;Shopping // Supermarkets
+15.05.2026;Entry;"Acquisto/servizio del 15.05.2026, ALDI Pregassona 60";;-17.75;;Shopping // Supermarkets
+14.05.2026;Entry;"TWINT invio di denaro a +41792466780";;-20;;Finances // Transfers other
+14.05.2026;Entry;"TWINT acquisto/servizio SBB EasyRide";;-2.6;;Mobility // Public transport
+13.05.2026;Entry;"Acquisto/servizio del 13.05.2026, Coop-1383 Pregassona";;-11.4;;Shopping // Supermarkets
+13.05.2026;Entry;"Acquisto/servizio del 13.05.2026, Migros Cassarate";;-10.15;;Shopping // Supermarkets
+13.05.2026;Entry;"TWINT ricevimento di denaro da +41765098401";2.2;;;Other incomings
+13.05.2026;Entry;"Acquisto/servizio del 13.05.2026, SV (Svizzera) SA";;-4.4;;Leisure // Food services
+12.05.2026;Entry;"Acquisto/servizio del 12.05.2026, Coop-1383 Pregassona";;-26.95;;Shopping // Supermarkets
+12.05.2026;Entry;"TWINT ricevimento di denaro da +41765098401";2.2;;;Other incomings
+12.05.2026;Entry;"Acquisto/servizio del 12.05.2026, Fully Burgers And Frie";;-26;;Leisure // Food services
+12.05.2026;Entry;"Acquisto/servizio del 12.05.2026, ALDI Pregassona 60";;-3.8;;Shopping // Supermarkets
+11.05.2026;Entry;"Acquisto/servizio del 11.05.2026, Coop-1383 Pregassona";;-27.15;;Shopping // Supermarkets
+11.05.2026;Entry;"Acquisto/servizio del 11.05.2026, Coop-2448 Viganello";;-15.75;;Shopping // Supermarkets
+11.05.2026;Entry;"TWINT ricevimento di denaro da +41765098401";2.2;;;Other incomings
+11.05.2026;Entry;"Acquisto/servizio del 11.05.2026, SV (Svizzera) SA";;-4.4;;Leisure // Food services
+11.05.2026;Entry;"Addebito a Sunrise LLC yallo";;-76.3;;Residing // Communication
+11.05.2026;Entry;"Addebito a Olivier Corda";;-70.56;;Expenditures other
+11.05.2026;Entry;"Addebito a Olivier Corda";;-337.9;;Expenditures other
+10.05.2026;Entry;"Acquisto/servizio del 10.05.2026, McDonald's Pazzallo";;-38.9;;Leisure // Food services
+10.05.2026;Entry;"Acquisto/servizio del 10.05.2026, G.EMME Properties SA";;-1;;Mobility // Private transport
+08.05.2026;Entry;"Acquisto/servizio del 08.05.2026, Coop-2448 Viganello";;-22.9;;Shopping // Supermarkets
+08.05.2026;Entry;"Acquisto/servizio del 08.05.2026, Rist. New Saint Louis";;-17;;Leisure // Food services
+07.05.2026;Entry;"Acquisto/servizio del 07.05.2026, Coop-1383 Pregassona";;-38.85;;Shopping // Supermarkets
+07.05.2026;Entry;"Acquisto/servizio del 07.05.2026, Migros Pregassona";;-60.55;;Shopping // Supermarkets
+07.05.2026;Entry;"Addebito a Associazione 8Hz family coworking";;-1590;;Expenditures other
+06.05.2026;Entry;"TWINT acquisto/servizio SBB EasyRide";;-2.6;;Mobility // Public transport
+06.05.2026;Entry;"Acquisto/servizio del 06.05.2026, Coop-1383 Pregassona";;-4.95;;Shopping // Supermarkets
+05.05.2026;Entry;"Acquisto/servizio del 05.05.2026, LSP*Flavio";;-15.6;;Leisure // Food services
+05.05.2026;Entry;"TWINT ricevimento di denaro da +41765098401";2.2;;;Other incomings
+05.05.2026;Entry;"Acquisto/servizio del 05.05.2026, SV (Svizzera) SA";;-4.4;;Leisure // Food services
+05.05.2026;Entry;"Acquisto/servizio del 05.05.2026, Orient Express";;-18.9;;Leisure // Food services
+05.05.2026;Entry;"TWINT ricevimento di denaro da +41765098401";2.2;;;Other incomings
+05.05.2026;Entry;"Acquisto/servizio del 05.05.2026, SV (Svizzera) SA";;-4.4;;Leisure // Food services
+04.05.2026;Entry;"Acquisto/servizio del 04.05.2026, Coop-2448 Viganello";;-27.6;;Shopping // Supermarkets
+04.05.2026;Entry;"Acquisto/servizio del 04.05.2026, SV (Svizzera) SA";;-4.4;;Leisure // Food services
+02.05.2026;Entry;"Acquisto/servizio del 02.05.2026, Ristorante Pizzeria del Sole";;-45;;Leisure // Food services
+02.05.2026;Entry;"Acquisto/servizio del 02.05.2026, Coop-1383 Pregassona";;-1.7;;Shopping // Supermarkets
+02.05.2026;Entry;"TWINT acquisto/servizio Parkingpay-TWINT";;-1.2;;Mobility // Private transport
+02.05.2026;Entry;"Acquisto/servizio del 02.05.2026, TIGROS SPA";;-164.52;;Shopping // Supermarkets
+01.05.2026;Entry;"Acquisto/servizio del 01.05.2026, Autosilo Balestra";;-6;;Mobility // Private transport
+01.05.2026;Entry;"Acquisto/servizio del 01.05.2026, Burger King BK Lugano";;-21.9;;Leisure // Food services
+30.04.2026;Entry;"Acquisto/servizio del 30.04.2026, Coop-1899 Lugano Nord";;-65;;Shopping // Supermarkets
+30.04.2026;Entry;"Prezzo per pacchetto bancario Smart";;-5;;Finances // Fees
+30.04.2026;Entry;"Addebito a AMAG Leasing AG";;-416.45;;Mobility // Private transport
+30.04.2026;Entry;"Addebito a Tanya Velichkova";;-200;;Expenditures other
+29.04.2026;Entry;"Acquisto/servizio del 29.04.2026, Jack Jones";;-263.65;;Shopping // Fashion
+29.04.2026;Entry;"Acquisto/servizio del 29.04.2026, Orchestra";;-10.3;;Living // Family
+29.04.2026;Entry;"Acquisto/servizio del 29.04.2026, IKEA SA";;-70.2;;Residing // Furniture
+29.04.2026;Entry;"Acquisto/servizio del 29.04.2026, IKEA SA";;-5.45;;Residing // Furniture
+29.04.2026;Entry;"TWINT acquisto/servizio SBB EasyRide";;-2.6;;Mobility // Public transport
+29.04.2026;Entry;"TWINT ricevimento di denaro da +41765098401";2.2;;;Other incomings
+29.04.2026;Entry;"Acquisto/servizio del 29.04.2026, SV (Svizzera) SA";;-4.4;;Leisure // Food services
+29.04.2026;Entry;"Addebito a Nadia Bosoni";;-2550;;Expenditures other
+28.04.2026;Entry;"Acquisto/servizio del 28.04.2026, Manor Sud SA - 733 (LUGS)";;-0.8;;Shopping // Shopping other
+28.04.2026;Entry;"Acquisto/servizio del 28.04.2026, Lidl 292";;-10.39;;Shopping // Supermarkets
+28.04.2026;Entry;"Prelievo in contanti del 28.04.2026, Posta CH SA (1773)";;-200;;Shopping // Shopping other
+28.04.2026;Entry;"TWINT ricevimento di denaro da +41765098401";2.2;;;Other incomings
+28.04.2026;Entry;"Acquisto/servizio del 28.04.2026, SV (Svizzera) SA";;-4.4;;Leisure // Food services
+27.04.2026;Entry;"Acquisto/servizio del 27.04.2026, Coop-1383 Pregassona";;-41.6;;Shopping // Supermarkets
+27.04.2026;Entry;"TWINT invio di denaro a +41792466780";;-50;;Finances // Transfers other
+27.04.2026;Entry;"TWINT ricevimento di denaro da +41765098401";2.2;;;Other incomings
+27.04.2026;Entry;"Acquisto/servizio del 27.04.2026, SV (Svizzera) SA";;-6.5;;Leisure // Food services
+27.04.2026;Entry;"Addebito a Assura-Basis SA";;-24.5;;Finances // Insurance
+27.04.2026;Entry;"Addebito a Assura-Basis SA";;-9.65;;Finances // Insurance
+27.04.2026;Entry;"Addebito a Assura-Basis SA";;-184.15;;Finances // Insurance
+27.04.2026;Entry;"Addebito a Assura-Basis SA";;-10.9;;Finances // Insurance
+27.04.2026;Entry;"Addebito a Assura-Basis SA";;-10.25;;Finances // Insurance
+27.04.2026;Entry;"Addebito a Assura-Basis SA";;-170.5;;Finances // Insurance
+27.04.2026;Entry;"Addebito a Assura-Basis SA";;-489.15;;Finances // Insurance
+27.04.2026;Entry;"Addebito a Comune di Lugano";;-355;;Finances // Taxes
+26.04.2026;Entry;"Acquisto/servizio del 26.04.2026, Migrol Service Manno";;-4;;Mobility // Private transport
+26.04.2026;Entry;"TWINT acquisto/servizio Parkingpay-TWINT";;-2.3;;Mobility // Private transport
+26.04.2026;Entry;"Acquisto/servizio del 26.04.2026, Migrol Service Manno";;-78.11;;Mobility // Private transport
+25.04.2026;Entry;"Acquisto/servizio del 25.04.2026, Migros Stabile Lugano";;-1;;Shopping // Supermarkets
+25.04.2026;Entry;"TWINT acquisto/servizio SBB EasyRide";;-2.6;;Mobility // Public transport
+24.04.2026;Entry;"Acquisto/servizio del 24.04.2026, Coop-2448 Viganello";;-82.95;;Shopping // Supermarkets
+24.04.2026;Entry;"TWINT ricevimento di denaro da +41765413756";1300;;;Other incomings
+24.04.2026;Entry;"Accredito di Scuola Universitaria Professionale";5465;;;Income
+23.04.2026;Entry;"Acquisto/servizio del 23.04.2026, Coop-1383 Pregassona";;-40.3;;Shopping // Supermarkets
+22.04.2026;Entry;"Acquisto/servizio del 22.04.2026, LS Yummy Lugano";;-19;;Leisure // Food services
+22.04.2026;Entry;"Acquisto/servizio del 22.04.2026, SV (Svizzera) SA";;-6.5;;Leisure // Food services
+22.04.2026;Entry;"Addebito a Nadia Bosoni";;-448.7;;Expenditures other
+22.04.2026;Entry;"Addebito a AMAG Automobil und Motoren AG";;-196.25;;Mobility // Public transport
+21.04.2026;Entry;"Acquisto/servizio del 21.04.2026, Coop-4245 Canobbio Resega";;-43;;Shopping // Supermarkets
+20.04.2026;Entry;"Addebito a Touring Club Svizzero";;-31.5;;Finances // Insurance
+19.04.2026;Entry;"Acquisto/servizio del 19.04.2026, VOI Viganello";;-7.15;;Shopping // Supermarkets
+19.04.2026;Entry;"Acquisto/servizio del 19.04.2026, Denner Discount 801";;-14.75;;Shopping // Supermarkets
+17.04.2026;Entry;"Acquisto/servizio del 17.04.2026, STRAPANINO SAGL";;-23.5;;Leisure // Food services
+17.04.2026;Entry;"TWINT ricevimento di denaro da +41765098401";4.2;;;Other incomings
+17.04.2026;Entry;"Acquisto/servizio del 17.04.2026, SV (Svizzera) SA";;-8.6;;Leisure // Food services
+17.04.2026;Entry;"CH-DD Aziende Industriali di Lugano";;-77.4;;Expenditures other
+16.04.2026;Entry;"Acquisto/servizio del 16.04.2026, Coop-1383 Pregassona";;-14.7;;Shopping // Supermarkets
+16.04.2026;Entry;"TWINT acquisto/servizio SBB EasyRide";;-2.6;;Mobility // Public transport
+15.04.2026;Entry;"Acquisto/servizio del 15.04.2026, Coop-2448 Viganello";;-31.8;;Shopping // Supermarkets
+15.04.2026;Entry;"Acquisto/servizio del 15.04.2026, LS Yummy Lugano";;-29.9;;Leisure // Food services
+15.04.2026;Entry;"TWINT ricevimento di denaro da +41765098401";4.4;;;Other incomings
+15.04.2026;Entry;"Acquisto/servizio del 15.04.2026, SV (Svizzera) SA";;-4.4;;Leisure // Food services
+14.04.2026;Entry;"Acquisto/shopping online del 14.04.2026, TCS Tcs Mitgli";;-107;;Living // Living other
+14.04.2026;Entry;"Acquisto/servizio del 14.04.2026, Lidl 292";;-3.7;;Shopping // Supermarkets
+14.04.2026;Entry;"Acquisto/servizio del 14.04.2026, san bartolomeo";;-23;;Leisure // Food services
+14.04.2026;Entry;"Acquisto/servizio del 14.04.2026, SV (Svizzera) SA";;-6.5;;Leisure // Food services
+14.04.2026;Entry;"Accredito di Scuola Universitaria Professionale";69.8;;;Other incomings
+14.04.2026;Entry;"Addebito a Sunrise GmbH";;-81.5;;Residing // Communication
+14.04.2026;Entry;"Addebito a Associazione 8Hz family coworking";;-1290;;Expenditures other
+13.04.2026;Entry;"Acquisto/shopping online del 13.04.2026, PEDAGGI AUT PEDEMONTAN";;-3.14;;Mobility // Public transport
+13.04.2026;Entry;"Acquisto/servizio del 13.04.2026, Coop-1383 Pregassona";;-65.85;;Shopping // Supermarkets
+12.04.2026;Entry;"Acquisto/servizio del 12.04.2026, ASPIT DIREZ. USCITA -";;-2.38;;Mobility // Public transport
+12.04.2026;Entry;"Acquisto/servizio del 12.04.2026, ENI - STAZIONE";;-81.07;;Mobility // Private transport
+12.04.2026;Entry;"Acquisto/servizio del 12.04.2026, PARCHEGGI MALPENSA T1";;-151.89;;Mobility // Private transport
+12.04.2026;Entry;"Acquisto/servizio del 12.04.2026, EDDYS CATTERING LTD";;-37.6;;Leisure // Food services
+12.04.2026;Entry;"Acquisto/servizio del 12.04.2026, COSTA COFFEE T2";;-14.05;;Leisure // Food services
+11.04.2026;Entry;"Acquisto/servizio del 11.04.2026, SHELL NADEJDA";;-48.56;;Mobility // Private transport
+10.04.2026;Entry;"Acquisto/servizio del 10.04.2026, HOLIDAY HOME";;-43.92;;Living // Living other
+09.04.2026;Entry;"Acquisto/servizio del 09.04.2026, PARKING FEE";;-7.58;;Mobility // Private transport
+09.04.2026;Entry;"Acquisto/servizio del 09.04.2026, COSTA";;-12.89;;Leisure // Culture
+09.04.2026;Entry;"Acquisto/servizio del 09.04.2026, SIELA NORMA AD";;-71.32;;Shopping // Literature
+09.04.2026;Entry;"Acquisto/servizio del 09.04.2026, CRAFT LINE EOOD";;-33.56;;Leisure // Food services
+07.04.2026;Entry;"Acquisto/servizio del 07.04.2026, MAGAZINCHE TOCHKA KOM";;-46.97;;Living // Living other
+04.04.2026;Entry;"Acquisto/servizio del 04.04.2026, PARADISE CENTER";;-2.84;;Mobility // Private transport
+04.04.2026;Entry;"Acquisto/servizio del 04.04.2026, HIPPOLAND AD";;-48.37;;Shopping // Toys
+04.04.2026;Entry;"Acquisto/servizio del 04.04.2026, DM BULGARIA EOOD";;-33.18;;Living // Styling and wellness
+04.04.2026;Entry;"Acquisto/servizio del 04.04.2026, BEYZADE EOOD";;-18.89;;Shopping // Grocery
+03.04.2026;Entry;"Acquisto/servizio del 03.04.2026, ASPIT DIREZ.ENTRATA -";;-2.36;;Mobility // Public transport
+03.04.2026;Entry;"Ricarica conto carta di credito PostFinance";;-200;;Transfers
+02.04.2026;Entry;"Addebito a Comune di Lugano";;-100;;Finances // Transfers other
+01.04.2026;Entry;"Acquisto/shopping online del 01.04.2026, GOOGLE*CLOUD Z5KVHV";;-0.34;;Expenditures other
+01.04.2026;Entry;"TWINT acquisto/servizio SBB EasyRide";;-2.6;;Mobility // Public transport
+01.04.2026;Entry;"Acquisto/servizio del 01.04.2026, SV (Svizzera) SA";;-4.3;;Leisure // Food services
+31.03.2026;Entry;"Acquisto/servizio del 31.03.2026, Lidl 292";;-17.5;;Shopping // Supermarkets
+31.03.2026;Entry;"TWINT invio di denaro a +41792466780";;-22;;Finances // Transfers other
+31.03.2026;Entry;"TWINT acquisto/servizio SBB EasyRide";;-33.8;;Mobility // Public transport
+31.03.2026;Entry;"Prezzo per pacchetto bancario Smart";;-5;;Finances // Fees
+31.03.2026;Entry;"Addebito a AMAG Leasing AG";;-416.45;;Mobility // Private transport
+31.03.2026;Entry;"Addebito a SERAFE AG";;-331.15;;Residing // Communication
+30.03.2026;Entry;"Acquisto/servizio del 30.03.2026, kkiosk 18457";;-9.55;;Shopping // Shopping other
+30.03.2026;Entry;"Acquisto/servizio del 30.03.2026, Coop-2448 Viganello";;-16.35;;Shopping // Supermarkets
+30.03.2026;Entry;"Addebito a Tanya Velichkova";;-200;;Expenditures other
+29.03.2026;Entry;"Acquisto/servizio del 29.03.2026, Autosilo Balestra";;-4;;Mobility // Private transport
+29.03.2026;Entry;"Acquisto/servizio del 29.03.2026, Ristorante ACQUA E FARINA";;-77.5;;Leisure // Food services
+28.03.2026;Entry;"Acquisto/servizio del 28.03.2026, Coop-4245 Canobbio Resega";;-39.45;;Shopping // Supermarkets
+28.03.2026;Entry;"Acquisto/servizio del 28.03.2026, Migros Stabile Lugano";;-4;;Shopping // Supermarkets
+28.03.2026;Entry;"Acquisto/servizio del 28.03.2026, Fully Burgers And Frie";;-26;;Leisure // Food services
+27.03.2026;Entry;"Acquisto/servizio del 27.03.2026, L.07663.10120 Parking";;-2;;Mobility // Private transport
+27.03.2026;Entry;"Acquisto/servizio del 27.03.2026, Autosilo Balestra";;-3;;Mobility // Private transport
+27.03.2026;Entry;"Addebito a Nadia Bosoni";;-2550;;Expenditures other
+26.03.2026;Entry;"Acquisto/servizio del 26.03.2026, Coop-4245 Canobbio Resega";;-77.3;;Shopping // Supermarkets
+26.03.2026;Entry;"Addebito a Assura-Basis SA";;-170.5;;Finances // Insurance
+26.03.2026;Entry;"Addebito a Assura-Basis SA";;-12.25;;Finances // Insurance
+26.03.2026;Entry;"Addebito a Assura-Basis SA";;-37.45;;Finances // Insurance
+26.03.2026;Entry;"Addebito a Assura-Basis SA";;-441.45;;Finances // Insurance
+26.03.2026;Entry;"Addebito a Assura-Basis SA";;-489.15;;Finances // Insurance
+25.03.2026;Entry;"TWINT ricevimento di denaro da +41765413756";1000;;;Other incomings
+25.03.2026;Entry;"Acquisto/servizio del 25.03.2026, Coop-2448 Viganello";;-11.85;;Shopping // Supermarkets
+25.03.2026;Entry;"Acquisto/servizio del 25.03.2026, Clinica Ars Medica";;-2;;Living // Healthcare
+25.03.2026;Entry;"Accredito di Scuola Universitaria Professionale";5465;;;Income
+24.03.2026;Entry;"Acquisto/servizio del 24.03.2026, Farmacia Coop Vitality";;-10.95;;Living // Healthcare
+23.03.2026;Entry;"Acquisto/servizio del 23.03.2026, Coop-2448 Viganello";;-103.45;;Shopping // Supermarkets
+23.03.2026;Entry;"Acquisto/servizio del 23.03.2026, Farmacia Coop Vitality";;-17;;Living // Healthcare
+22.03.2026;Entry;"Acquisto/servizio del 22.03.2026, Posteggio Campo Marzio";;-2;;Mobility // Private transport
+21.03.2026;Entry;"Acquisto/servizio del 21.03.2026, Service Station 777";;-50.1;;Mobility // Private transport
+21.03.2026;Entry;"TWINT invio di denaro a +41763191221";;-59;;Finances // Transfers other
+21.03.2026;Entry;"Acquisto/servizio del 21.03.2026, Coop-2448 Viganello";;-3.8;;Shopping // Supermarkets
+21.03.2026;Entry;"Acquisto/servizio del 21.03.2026, Farmacia Coop Vitality";;-33.65;;Living // Healthcare
+20.03.2026;Entry;"Acquisto/servizio del 20.03.2026, Coop-4245 Canobbio Resega";;-49.15;;Shopping // Supermarkets
+20.03.2026;Entry;"Acquisto/servizio del 20.03.2026, Coop-4050 Canobbio Restaurant";;-41;;Leisure // Food services
+18.03.2026;Entry;"TWINT acquisto/servizio Tradeinn Retail Services";;-41.98;;Leisure // Sports
+18.03.2026;Entry;"Acquisto/servizio del 18.03.2026, Migros Pregassona";;-34.75;;Shopping // Supermarkets
+18.03.2026;Entry;"Acquisto/servizio del 18.03.2026, Ristoranti McDonald's";;-21.8;;Leisure // Food services
+17.03.2026;Entry;"Acquisto/servizio del 17.03.2026, McDonald's Restaurant 20033";;-28.6;;Leisure // Food services
+17.03.2026;Entry;"TWINT acquisto/servizio Parkingpay-TWINT";;-2;;Mobility // Private transport
+16.03.2026;Entry;"TWINT acquisto/servizio SUPSI - Nuovo Campus Est";;-20;;Shopping // Grocery
+14.03.2026;Entry;"Acquisto/servizio del 14.03.2026, Migros MR Grancia-MiGusto";;-5;;Leisure // Food services
+14.03.2026;Entry;"Acquisto/servizio del 14.03.2026, Migros MR Grancia-MiGusto";;-17.9;;Leisure // Food services
+13.03.2026;Entry;"Acquisto/servizio del 13.03.2026, Coop-4245 Canobbio Resega";;-68.6;;Shopping // Supermarkets
+13.03.2026;Entry;"Acquisto/servizio del 13.03.2026, Lidl 292";;-12.75;;Shopping // Supermarkets
+13.03.2026;Entry;"Acquisto/servizio del 13.03.2026, ASPIT DIREZ. USCITA -";;-2.31;;Mobility // Public transport
+12.03.2026;Entry;"Acquisto/servizio del 12.03.2026, BRI Shop";;-12.55;;Living // Styling and wellness
+12.03.2026;Entry;"Acquisto/servizio del 12.03.2026, Bari Vecchia Aeroport";;-17.84;;Leisure // Culture
+12.03.2026;Entry;"Acquisto/servizio del 12.03.2026, TAXI 52";;-23.23;;Mobility // Private transport
+12.03.2026;Entry;"Acquisto/servizio del 12.03.2026, WE ARE HAIR LAB";;-18.58;;Living // Styling and wellness
+12.03.2026;Entry;"Acquisto/servizio del 12.03.2026, RIVIERA SRLS";;-12.08;;Leisure // Culture
+12.03.2026;Entry;"Acquisto/servizio del 12.03.2026, BARI CAVUOR";;-18.49;;Living // Living other
+11.03.2026;Entry;"Acquisto/servizio del 11.03.2026, LE NICCHIE";;-33.45;;Residing // Communication
+11.03.2026;Entry;"Acquisto/servizio del 11.03.2026, MAMAPULIA SRL";;-18.57;;Leisure // Food services
+10.03.2026;Entry;"Acquisto/servizio del 10.03.2026, MORETTI NICOLA";;-23.22;;Mobility // Private transport
+10.03.2026;Entry;"Acquisto/servizio del 10.03.2026, APT MALPENSA WAGAMAMA";;-28.42;;Shopping // Grocery
+10.03.2026;Entry;"Acquisto/servizio del 10.03.2026, DUFRITAL 119 MXP T1";;-22.41;;Living // Styling and wellness
+10.03.2026;Entry;"Acquisto/servizio del 10.03.2026, ASPIT DIREZ.ENTRATA -";;-2.31;;Mobility // Public transport
+10.03.2026;Entry;"Acquisto/servizio del 10.03.2026, Coop-2448 Viganello";;-16.5;;Shopping // Supermarkets
+10.03.2026;Entry;"Acquisto/shopping online del 10.03.2026, DOS SANTOS MAGALHAES J";;-155.99;;Leisure // Travel & Experience
+10.03.2026;Entry;"TWINT ricevimento di denaro da +41765098401";2.2;;;Other incomings
+10.03.2026;Entry;"Acquisto/servizio del 10.03.2026, SV (Svizzera) SA";;-4.4;;Leisure // Food services
+10.03.2026;Entry;"Acquisto/servizio del 10.03.2026, Coop-1899 Lugano Nord";;-4.95;;Shopping // Supermarkets
+09.03.2026;Entry;"Acquisto/servizio del 09.03.2026, Coop-2448 Viganello";;-36.8;;Shopping // Supermarkets
+09.03.2026;Entry;"TWINT ricevimento di denaro da +41765098401";2.2;;;Other incomings
+09.03.2026;Entry;"Acquisto/servizio del 09.03.2026, SV (Svizzera) SA";;-6.5;;Leisure // Food services
+09.03.2026;Entry;"Addebito a Sunrise GmbH";;-70.9;;Residing // Communication
+08.03.2026;Entry;"TWINT acquisto/servizio ALDI Pregassona 60";;-25.35;;Shopping // Supermarkets
+07.03.2026;Entry;"Acquisto/servizio del 07.03.2026, Posteggio Campo Marzio";;-5;;Mobility // Private transport
+07.03.2026;Entry;"Acquisto/servizio del 07.03.2026, Manor Sud SA - 825 (LUGR)";;-26.7;;Shopping // Shopping other
+06.03.2026;Entry;"Acquisto/servizio del 06.03.2026, Coop-1383 Pregassona";;-42.2;;Shopping // Supermarkets
+06.03.2026;Entry;"TWINT acquisto/servizio Posterlounge.com";;-53.9;;Expenditures other
+06.03.2026;Entry;"Acquisto/servizio del 06.03.2026, STRAPANINO SAGL";;-22.5;;Leisure // Food services
+04.03.2026;Entry;"Acquisto/shopping online del 04.03.2026, FAL FEATURES LABELS";;-41.23;;Residing // Communication
+04.03.2026;Entry;"TWINT ricevimento di denaro da +41765098401";10.9;;;Other incomings
+04.03.2026;Entry;"Acquisto/servizio del 04.03.2026, LS Yummy Lugano";;-30.9;;Leisure // Food services
+04.03.2026;Entry;"Ricarica conto carta di credito PostFinance";;-313;;Transfers
+04.03.2026;Entry;"Addebito a Associazione 8Hz family coworking";;-1520;;Expenditures other
+03.03.2026;Entry;"Acquisto/servizio del 03.03.2026, Coop-2448 Viganello";;-8.95;;Shopping // Supermarkets
+03.03.2026;Entry;"Acquisto/servizio del 03.03.2026, Coop-2448 Viganello";;-28.3;;Shopping // Supermarkets
+03.03.2026;Entry;"TWINT ricevimento di denaro da +41765098401";2.2;;;Other incomings
+03.03.2026;Entry;"Acquisto/servizio del 03.03.2026, SV (Svizzera) SA";;-7.8;;Leisure // Food services
+01.03.2026;Entry;"Acquisto/shopping online del 01.03.2026, Google CLOUD z6CHNT";;-1.3;;Expenditures other
+01.03.2026;Entry;"Acquisto/servizio del 01.03.2026, IPERAL CARLAZZO";;-115.48;;Shopping // Supermarkets
+28.02.2026;Entry;"Acquisto/servizio del 28.02.2026, McDonald's Restaurant 20033";;-23;;Leisure // Food services
+28.02.2026;Entry;"Acquisto/servizio del 28.02.2026, Eni Lugano Via Ciani";;-77.7;;Mobility // Private transport
+28.02.2026;Entry;"Prezzo per pacchetto bancario Smart";;-5;;Finances // Fees
+27.02.2026;Entry;"Addebito a Nadia Bosoni";;-2550;;Expenditures other
+27.02.2026;Entry;"Addebito a AMAG Leasing AG";;-416.45;;Mobility // Private transport
+27.02.2026;Entry;"Addebito a Besenzoni Sofia";;-250;;Expenditures other
+27.02.2026;Entry;"Addebito a Tanya Velichkova";;-200;;Expenditures other
+25.02.2026;Entry;"Acquisto/servizio del 25.02.2026, ALDI SUISSE AG";;-31.35;;Shopping // Supermarkets
+25.02.2026;Entry;"Acquisto/servizio del 25.02.2026, BP Station 5017";;-16.7;;Mobility // Private transport
+25.02.2026;Entry;"TWINT ricevimento di denaro da +41765413756";1300;;;Other incomings
+25.02.2026;Entry;"Accredito di Scuola Universitaria Professionale";5342.35;;;Income
+24.02.2026;Entry;"Acquisto/shopping online del 24.02.2026, SP BYGENEVA";;-133.93;;Shopping // Fashion
+24.02.2026;Entry;"Acquisto/servizio del 24.02.2026, McDonald's Restaurant 20033";;-21.6;;Leisure // Food services
+24.02.2026;Entry;"Acquisto/servizio del 24.02.2026, SV (Svizzera) SA";;-6.5;;Leisure // Food services
+23.02.2026;Entry;"Acquisto/servizio del 23.02.2026, Coop-4245 Canobbio Resega";;-61.25;;Shopping // Supermarkets
+22.02.2026;Entry;"TWINT acquisto/servizio Migros Molino Nuovo";;-9.55;;Shopping // Supermarkets
+21.02.2026;Entry;"Acquisto/servizio del 21.02.2026, san bartolomeo";;-33;;Leisure // Food services
+20.02.2026;Entry;"Acquisto/servizio del 20.02.2026, Rist. New Saint Louis";;-14.9;;Leisure // Food services
+20.02.2026;Entry;"TWINT invio di denaro a +41792466780";;-30;;Finances // Transfers other
+20.02.2026;Entry;"Acquisto/shopping online del 20.02.2026, MILAN AIRPORTS SHOP";;-41.2;;Mobility // Public transport
+20.02.2026;Entry;"TWINT invio di denaro a +41765098401";;-2.2;;Finances // Transfers other
+20.02.2026;Entry;"Addebito a Assura-Basis SA";;-489.15;;Finances // Insurance
+20.02.2026;Entry;"Addebito a Assura-Basis SA";;-172.9;;Finances // Insurance
+20.02.2026;Entry;"Addebito a Assura-Basis SA";;-15.85;;Finances // Insurance
+19.02.2026;Entry;"Acquisto/servizio del 19.02.2026, Coop-1383 Pregassona";;-27.8;;Shopping // Supermarkets
+19.02.2026;Entry;"Acquisto/shopping online del 19.02.2026, OPENAI *CHATGPT SUBSCR";;-21.58;;Residing // Communication
+19.02.2026;Entry;"Acquisto/shopping online del 19.02.2026, Bulgaria Air JSC";;-474.45;;Leisure // Flights
+18.02.2026;Entry;"Acquisto/servizio del 18.02.2026, Posteggio Campo Marzio";;-3;;Mobility // Private transport
+18.02.2026;Entry;"Acquisto/servizio del 18.02.2026, Coop-1899 Lugano Nord";;-3;;Shopping // Supermarkets
+18.02.2026;Entry;"Acquisto/servizio del 18.02.2026, Coop-1899 Lugano Nord";;-50.25;;Shopping // Supermarkets
+18.02.2026;Entry;"Acquisto/shopping online del 18.02.2026, Google Slayer Legend";;-6.9;;Residing // Communication
+18.02.2026;Entry;"Accredito di Scuola Universitaria Professionale";40.47;;;Other incomings
+17.02.2026;Entry;"Acquisto/servizio del 17.02.2026, Coop-2448 Viganello";;-41.95;;Shopping // Supermarkets
+14.02.2026;Entry;"Acquisto/servizio del 14.02.2026, NI SUSHIPUB";;-63.83;;Leisure // Food services
+14.02.2026;Entry;"Acquisto/servizio del 14.02.2026, Parcheggio Clinica Moncucco";;-2;;Mobility // Private transport
+14.02.2026;Entry;"Acquisto/servizio del 14.02.2026, Coop-4245 Canobbio Resega";;-132.35;;Shopping // Supermarkets
+13.02.2026;Entry;"TWINT invio di denaro a +41792466780";;-45;;Finances // Transfers other
+13.02.2026;Entry;"Acquisto/servizio del 13.02.2026, Autosilo Piazza del Sole";;-4;;Mobility // Private transport
+12.02.2026;Entry;"Acquisto/servizio del 12.02.2026, McDonald's Restaurant 20033";;-20.6;;Leisure // Food services
+12.02.2026;Entry;"Addebito a Sunrise GmbH";;-70.9;;Residing // Communication
+11.02.2026;Entry;"TWINT ricevimento di denaro da +41765098401";2.2;;;Other incomings
+11.02.2026;Entry;"Acquisto/servizio del 11.02.2026, SV (Svizzera) SA";;-4.4;;Leisure // Food services
+11.02.2026;Entry;"Acquisto/servizio del 11.02.2026, STRAPANINO SAGL";;-26;;Leisure // Food services
+10.02.2026;Entry;"TWINT acquisto/servizio SUPSI - Nuovo Campus Est";;-20;;Shopping // Grocery
+09.02.2026;Entry;"Acquisto/servizio del 09.02.2026, Coop-1383 Pregassona";;-6.2;;Shopping // Supermarkets
+09.02.2026;Entry;"TWINT ricevimento di denaro da +41765098401";2.2;;;Other incomings
+09.02.2026;Entry;"TWINT acquisto/servizio SV (Svizzera) SA, 27532";;-4.4;;Leisure // Food services
+08.02.2026;Entry;"Acquisto/servizio del 08.02.2026, Migrol Lugano";;-75.76;;Mobility // Private transport
+08.02.2026;Entry;"Acquisto/servizio del 08.02.2026, Parcheggio Clinica Moncucco";;-1;;Mobility // Private transport
+08.02.2026;Entry;"Acquisto/servizio del 08.02.2026, Posteggio Campo Marzio";;-3;;Mobility // Private transport
+07.02.2026;Entry;"Acquisto/servizio del 07.02.2026, Coop-2448 Viganello";;-65.65;;Shopping // Supermarkets
+07.02.2026;Entry;"Acquisto/servizio del 07.02.2026, Parcheggio Clinica Moncucco";;-2;;Mobility // Private transport
+07.02.2026;Entry;"Acquisto/servizio del 07.02.2026, Ristorante Pizzeria del Sole";;-100;;Leisure // Food services
+06.02.2026;Entry;"Acquisto/shopping online del 06.02.2026, Google Legend of Mush";;-4.3;;Residing // Communication
+05.02.2026;Entry;"Acquisto/servizio del 05.02.2026, SV (Svizzera) SA";;-3.9;;Leisure // Food services
+05.02.2026;Entry;"Addebito a Associazione 8Hz family coworking";;-1436;;Expenditures other
+04.02.2026;Entry;"Acquisto/shopping online del 04.02.2026, Google Legend of Mush";;-8.8;;Residing // Communication
+04.02.2026;Entry;"Acquisto/servizio del 04.02.2026, Coop-1383 Pregassona";;-5.9;;Shopping // Supermarkets
+04.02.2026;Entry;"Acquisto/servizio del 04.02.2026, san bartolomeo";;-23;;Leisure // Food services
+04.02.2026;Entry;"Prelievo in contanti del 04.02.2026, Filiale";;-200;;Finances // Cash withdrawals
+04.02.2026;Entry;"TWINT acquisto/servizio SV (Svizzera) SA, 27532";;-8.6;;Leisure // Food services
+04.02.2026;Entry;"Acquisto/shopping online del 04.02.2026, MILAN AIRPORTS SHOP";;-51;;Mobility // Public transport
+04.02.2026;Entry;"Acquisto/shopping online del 04.02.2026, RYANAIR0000000RRR4VY";;-106.65;;Leisure // Flights
+04.02.2026;Entry;"Acquisto/shopping online del 04.02.2026, Google Legend of Mush";;-8.8;;Residing // Communication
+03.02.2026;Entry;"Acquisto/servizio del 03.02.2026, Coop-1383 Pregassona";;-38.95;;Shopping // Supermarkets
+03.02.2026;Entry;"Acquisto/servizio del 03.02.2026, Parcheggio Clinica Moncucco";;-1;;Mobility // Private transport
+02.02.2026;Entry;"Acquisto/servizio del 02.02.2026, SV (Svizzera) SA";;-2.2;;Leisure // Food services
+02.02.2026;Entry;"TWINT ricevimento di denaro da +41765098401";2.2;;;Other incomings
+02.02.2026;Entry;"Acquisto/servizio del 02.02.2026, SV (Svizzera) SA";;-6.5;;Leisure // Food services
+02.02.2026;Entry;"Addebito a Mobiliare Svizzera Società d'assicu";;-1713.85;;Finances // Insurance
+02.02.2026;Entry;"Addebito a Sezione della circolazione";;-223;;Mobility // Public transport
+02.02.2026;Entry;"Addebito a Sezione della circolazione";;-412;;Mobility // Public transport
+02.02.2026;Entry;"Addebito a PerfectHair AG";;-129.9;;Living // Styling and wellness
+31.01.2026;Entry;"Acquisto/servizio del 31.01.2026, BENNET LAVENA PONTE TR";;-178.65;;Shopping // Supermarkets
+31.01.2026;Entry;"Acquisto/servizio del 31.01.2026, MIZUMI SAS DI HU DONG.";;-49.9;;Leisure // Food services
+31.01.2026;Entry;"Prezzo per pacchetto bancario Smart";;-5;;Finances // Fees
+30.01.2026;Entry;"Acquisto/servizio del 30.01.2026, Coop-1383 Pregassona";;-25.45;;Shopping // Supermarkets
+30.01.2026;Entry;"Acquisto/shopping online del 30.01.2026, Google Legend of Mush";;-0.9;;Residing // Communication
+30.01.2026;Entry;"Acquisto/servizio del 30.01.2026, STRAPANINO SAGL";;-21;;Leisure // Food services
+30.01.2026;Entry;"Addebito a AMAG Leasing AG";;-416.45;;Mobility // Private transport
+30.01.2026;Entry;"Addebito a Besenzoni Sofia";;-250;;Expenditures other
+30.01.2026;Entry;"Addebito a Tanya Velichkova";;-200;;Expenditures other
+29.01.2026;Entry;"Acquisto/servizio del 29.01.2026, Clinica Ars Medica";;-2;;Living // Healthcare
+29.01.2026;Entry;"Addebito a Nadia Bosoni";;-2550;;Expenditures other
+28.01.2026;Entry;"Acquisto/servizio del 28.01.2026, Coop-1383 Pregassona";;-30.65;;Shopping // Supermarkets
+28.01.2026;Entry;"Acquisto/shopping online del 28.01.2026, FAL FEATURES LABELS";;-40.47;;Residing // Communication
+28.01.2026;Entry;"Acquisto/shopping online del 28.01.2026, Google Legend of Mush";;-8.8;;Residing // Communication
+28.01.2026;Entry;"Acquisto/shopping online del 28.01.2026, Google Legend of Mush";;-8.8;;Residing // Communication
+28.01.2026;Entry;"Acquisto/servizio del 28.01.2026, Coop-1383 Pregassona";;-0.05;;Shopping // Supermarkets
+28.01.2026;Entry;"Acquisto/servizio del 28.01.2026, Coop-1383 Pregassona";;-19.65;;Shopping // Supermarkets
+27.01.2026;Entry;"Acquisto/servizio del 27.01.2026, Lidl 292";;-6.05;;Shopping // Supermarkets
+26.01.2026;Entry;"Acquisto/servizio del 26.01.2026, CONTRADA DEI PATRIZI";;-9.3;;Living // Healthcare
+26.01.2026;Entry;"Acquisto/servizio del 26.01.2026, Coop-4245 Canobbio Resega";;-16.8;;Shopping // Supermarkets
+26.01.2026;Entry;"Acquisto/servizio del 26.01.2026, Coop-2448 Viganello";;-44.35;;Shopping // Supermarkets
+26.01.2026;Entry;"Acquisto/servizio del 26.01.2026, SV (Svizzera) SA";;-6.5;;Leisure // Food services
+25.01.2026;Entry;"Acquisto/servizio del 25.01.2026, Posteggio Campo Marzio";;-3;;Mobility // Private transport
+25.01.2026;Entry;"Acquisto/servizio del 25.01.2026, Caffè Pascucci";;-15;;Leisure // Food services
+25.01.2026;Entry;"Acquisto/servizio del 25.01.2026, ASPIT DIREZ. USCITA -";;-2.39;;Mobility // Public transport
+25.01.2026;Entry;"Acquisto/servizio del 25.01.2026, FOUND VERTEMATE";;-35.1;;Leisure // Food services
+24.01.2026;Entry;"Acquisto/servizio del 24.01.2026, ASPIT DIREZ.ENTRATA -";;-2.39;;Mobility // Public transport
+24.01.2026;Entry;"Acquisto/servizio del 24.01.2026, Posteggio Campo Marzio";;-4;;Mobility // Private transport
+24.01.2026;Entry;"Acquisto/servizio del 24.01.2026, Manor Sud SA - 825 (LUGR)";;-29.2;;Shopping // Shopping other
+24.01.2026;Entry;"Acquisto/servizio del 24.01.2026, Eni Lugano Via Ciani";;-70.49;;Mobility // Private transport
+23.01.2026;Entry;"TWINT acquisto/servizio McDonald's Lugano Pazzallo";;-24.5;;Leisure // Food services
+23.01.2026;Entry;"Acquisto/servizio del 23.01.2026, Rist. New Saint Louis";;-20.9;;Leisure // Food services
+23.01.2026;Entry;"Accredito di Scuola Universitaria Professionale";5342.35;;;Other incomings
+23.01.2026;Entry;"TWINT ricevimento di denaro da +41765413756";1300;;;Other incomings
+22.01.2026;Entry;"Acquisto/shopping online del 22.01.2026, Google Legend of Mush";;-4.3;;Residing // Communication
+22.01.2026;Entry;"Acquisto/shopping online del 22.01.2026, Google Legend of Mush";;-0.9;;Residing // Communication
+22.01.2026;Entry;"Acquisto/shopping online del 22.01.2026, Google Legend of Mush";;-8.8;;Residing // Communication
+22.01.2026;Entry;"Acquisto/shopping online del 22.01.2026, Google Legend of Mush";;-8.8;;Residing // Communication
+22.01.2026;Entry;"Acquisto/servizio del 22.01.2026, Migros Cassarate Snacky";;-72.75;;Shopping // Supermarkets
+21.01.2026;Entry;"Acquisto/shopping online del 21.01.2026, Google Legend of Mush";;-0.9;;Residing // Communication
+21.01.2026;Entry;"Acquisto/shopping online del 21.01.2026, Google Legend of Mush";;-4.3;;Residing // Communication
+21.01.2026;Entry;"Acquisto/shopping online del 21.01.2026, Google Legend of Mush";;-0.9;;Residing // Communication
+20.01.2026;Entry;"Acquisto/shopping online del 20.01.2026, Google Legend of Mush";;-8.8;;Residing // Communication
+20.01.2026;Entry;"Acquisto/servizio del 20.01.2026, Lidl 292";;-13.95;;Shopping // Supermarkets
+20.01.2026;Entry;"Acquisto/servizio del 20.01.2026, Coop-2448 Viganello";;-26.25;;Shopping // Supermarkets
+20.01.2026;Entry;"Acquisto/servizio del 20.01.2026, SV (Svizzera) SA";;-6.5;;Leisure // Food services
+20.01.2026;Entry;"Acquisto/shopping online del 20.01.2026, Google Legend of Mush";;-4.3;;Residing // Communication
+19.01.2026;Entry;"Acquisto/shopping online del 19.01.2026, OPENAI *CHATGPT SUBSCR";;-22.02;;Residing // Communication
+19.01.2026;Entry;"Acquisto/shopping online del 19.01.2026, Google Legend of Mush";;-0.9;;Residing // Communication
+18.01.2026;Entry;"TWINT invio di denaro a +41763191221";;-55;;Finances // Transfers other
+17.01.2026;Entry;"Acquisto/shopping online del 17.01.2026, Google Idle Cult Empi";;-6.1;;Residing // Communication
+17.01.2026;Entry;"Acquisto/servizio del 17.01.2026, Coop-1899 Lugano Nord";;-108.65;;Shopping // Supermarkets
+17.01.2026;Entry;"Acquisto/shopping online del 17.01.2026, Google Legend of Mush";;-0.9;;Residing // Communication
+16.01.2026;Entry;"Acquisto/servizio del 16.01.2026, Coop-2448 Viganello";;-29.3;;Shopping // Supermarkets
+16.01.2026;Entry;"Acquisto/servizio del 16.01.2026, SV (Svizzera) SA";;-4.4;;Leisure // Food services
+15.01.2026;Entry;"Acquisto/shopping online del 15.01.2026, Google Legend of Mush";;-8.8;;Residing // Communication
+15.01.2026;Entry;"Acquisto/servizio del 15.01.2026, Migros Pregassona";;-3.3;;Shopping // Supermarkets
+15.01.2026;Entry;"Acquisto/servizio del 15.01.2026, san bartolomeo";;-39;;Leisure // Food services
+14.01.2026;Entry;"Acquisto/servizio del 14.01.2026, Coop-1383 Pregassona";;-71.8;;Shopping // Supermarkets
+14.01.2026;Entry;"TWINT acquisto/servizio SUPSI - Nuovo Campus Est";;-20;;Shopping // Grocery
+14.01.2026;Entry;"Addebito a Sunrise GmbH";;-141.8;;Residing // Communication
+13.01.2026;Entry;"Acquisto/servizio del 13.01.2026, Coop-1383 Pregassona";;-26.75;;Shopping // Supermarkets
+13.01.2026;Entry;"Acquisto/servizio del 13.01.2026, Coop-2448 Viganello";;-8.85;;Shopping // Supermarkets
+13.01.2026;Entry;"TWINT ricevimento di denaro da +41765098401";2.2;;;Other incomings
+13.01.2026;Entry;"Acquisto/servizio del 13.01.2026, SV (Svizzera) SA";;-4.4;;Leisure // Food services
+12.01.2026;Entry;"Acquisto/servizio del 12.01.2026, Coop-1383 Pregassona";;-10.9;;Shopping // Supermarkets
+12.01.2026;Entry;"TWINT ricevimento di denaro da +41765098401";2.2;;;Other incomings
+12.01.2026;Entry;"Acquisto/servizio del 12.01.2026, SV (Svizzera) SA";;-8.3;;Leisure // Food services
+11.01.2026;Entry;"Acquisto/shopping online del 11.01.2026, Google Xavier Liard";;-2.99;;Residing // Communication
+11.01.2026;Entry;"Acquisto/servizio del 11.01.2026, Migros Molino Nuovo";;-21.95;;Shopping // Supermarkets
+10.01.2026;Entry;"Acquisto/servizio del 10.01.2026, L.07663.10120 Parking";;-2;;Mobility // Private transport
+10.01.2026;Entry;"Acquisto/servizio del 10.01.2026, Jack Jones";;-76.95;;Shopping // Fashion
+10.01.2026;Entry;"Acquisto/servizio del 10.01.2026, Coop-1989 Lugano Sud";;-36.2;;Shopping // Supermarkets
+10.01.2026;Entry;"Acquisto/servizio del 10.01.2026, SumUp *FULLYgrancia S";;-26;;Leisure // Food services
+09.01.2026;Entry;"Acquisto/servizio del 09.01.2026, Coop-2448 Viganello";;-15.95;;Shopping // Supermarkets
+09.01.2026;Entry;"Acquisto/servizio del 09.01.2026, Farmacia Coop Vitality";;-44.85;;Living // Healthcare
+09.01.2026;Entry;"Acquisto/servizio del 09.01.2026, Parking P-Resega";;-1;;Mobility // Private transport
+08.01.2026;Entry;"CH-DD Aziende Industriali di Lugano";;-128;;Expenditures other
+08.01.2026;Entry;"Addebito a Associazione 8Hz family coworking";;-995;;Expenditures other
+07.01.2026;Entry;"Acquisto/servizio del 07.01.2026, Pizzeria la Lupa";;-18;;Leisure // Food services
+06.01.2026;Entry;"Addebito a Dr. GIULIO AIROLDI";;-200;;Expenditures other
+06.01.2026;Entry;"Addebito a Dr. GIULIO AIROLDI";;-150;;Expenditures other
+05.01.2026;Entry;"Acquisto/servizio del 05.01.2026, Lidl 311";;-49.9;;Shopping // Supermarkets
+05.01.2026;Entry;"Acquisto/servizio del 05.01.2026, Service Station 777";;-63.39;;Mobility // Private transport
+05.01.2026;Entry;"Acquisto/servizio del 05.01.2026, BENNET LAVENA PONTE TR";;-204.73;;Shopping // Supermarkets
+04.01.2026;Entry;"Acquisto/servizio del 04.01.2026, Spaghetti Store SA";;-65;;Leisure // Food services
+02.01.2026;Entry;"Acquisto/servizio del 02.01.2026, ALDI Pregassona 60";;-14.55;;Shopping // Supermarkets
+02.01.2026;Entry;"TWINT acquisto/servizio McDonald's Lugano Pazzallo";;-28.4;;Leisure // Food services
+02.01.2026;Entry;"Acquisto/servizio del 02.01.2026, NYX*MariaTheresiaGeros";;-4;;Shopping // Grocery
+02.01.2026;Entry;"Acquisto/servizio del 02.01.2026, Farmacia Torre SA";;-44.8;;Living // Healthcare
+
+Disclaimer:
+The document content was generated by customer filter settings. PostFinance is not responsible for the content or its completeness.

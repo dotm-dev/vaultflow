@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { Lock, Shield, ArrowLeft, ArrowRight, Eye, EyeOff, CheckCircle, RefreshCw, CloudUpload, Info, Sparkles, X, AlertCircle, Coins, Globe, Hash, Calendar } from 'lucide-react';
+import { Lock, Shield, ArrowLeft, ArrowRight, Eye, EyeOff, CheckCircle, RefreshCw, CloudUpload, Sparkles, X, AlertCircle, Coins, Globe, Hash, Calendar } from 'lucide-react';
 import React, { useState, useRef } from 'react';
 import { cn } from '@/src/lib/utils';
 import { deriveEncryptionKey, hashPasswordForChallenge, encryptPayload, decryptPayload, generateSalt, bytesToHex, hexToBytes } from '../lib/crypto';
@@ -363,8 +363,8 @@ export default function WizardView({ onComplete, onCancel }: WizardViewProps) {
     switch (step) {
       case 1:
         return (
-          <div className="space-y-6">
-            <header className="flex flex-col items-center gap-6">
+          <div className="space-y-4">
+            <header className="flex flex-col gap-3">
               <div className="flex items-center justify-between w-full">
                 <div className="flex gap-2">
                   {[1, 2, 3, 4, 5].map((s) => (
@@ -381,21 +381,18 @@ export default function WizardView({ onComplete, onCancel }: WizardViewProps) {
                   <X className="w-6 h-6" />
                 </button>
               </div>
-              <div className="text-center space-y-2 mt-2">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl glass-card border-white/10 mb-2">
-                  <Lock className="w-9 h-9 text-nature-green fill-nature-green/20" />
-                </div>
-                <h1 className="text-2xl md:text-3xl font-bold text-on-surface tracking-tight">
+              <div className="text-center space-y-1">
+                <h1 className="text-xl md:text-2xl font-bold text-on-surface tracking-tight">
                   Master Key
                 </h1>
-                <p className="text-on-surface-variant max-w-[85%] mx-auto">
+                <p className="text-xs text-on-surface-variant max-w-[90%] mx-auto">
                   Set your primary encryption password. This unlocks your VaultFlow data.
                 </p>
               </div>
             </header>
 
             {/* Google Drive Connection Section */}
-            <div className="mx-2 p-5 bg-surface-dark/50 border border-white/5 light:border-black/5 rounded-2xl space-y-4">
+            <div className="mx-1 p-3 bg-surface-dark/40 border border-white/5 rounded-xl space-y-2">
               <div className="flex justify-between items-center">
                 <div>
                   <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-on-surface">Google Cloud Sync</h3>
@@ -405,13 +402,13 @@ export default function WizardView({ onComplete, onCancel }: WizardViewProps) {
                   <button
                     onClick={handleGoogleConnect}
                     disabled={isLoadingCloud}
-                    className="h-9 px-4 rounded-xl text-xs font-mono font-bold uppercase tracking-wider bg-white/5 hover:bg-white/10 text-on-surface border border-white/10 hover:border-white/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                    className="h-8 px-3 rounded-lg text-[11px] font-mono font-bold uppercase tracking-wider bg-white/5 hover:bg-white/10 text-on-surface border border-white/10 hover:border-white/20 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                   >
                     {isLoadingCloud ? (
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <RefreshCw className="w-3 h-3 animate-spin" />
                     ) : (
                       <>
-                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24">
+                        <svg className="w-3 h-3" viewBox="0 0 24 24">
                           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                           <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                           <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22-.19-.63z"/>
@@ -435,7 +432,7 @@ export default function WizardView({ onComplete, onCancel }: WizardViewProps) {
                         alt={googleUser.name}
                       />
                     )}
-                    <span className="text-[10px] font-mono text-nature-green font-bold truncate max-w-[100px]">{googleUser.name}</span>
+                    <span className="text-[10px] font-mono text-nature-green font-bold truncate max-w-[80px]">{googleUser.name}</span>
                     <button
                       onClick={() => {
                         setGoogleUser(null);
@@ -450,75 +447,68 @@ export default function WizardView({ onComplete, onCancel }: WizardViewProps) {
               </div>
 
               {googleUser && (
-                <div className="space-y-3 pt-2.5 border-t border-white/5">
-                  <div className="space-y-1">
-                    <label className="text-[9px] uppercase font-bold text-on-surface-variant font-mono tracking-wider">New Ledger Vault Name</label>
-                    <div className="relative group">
-                      <div className="absolute inset-0 bg-surface-dark/50 border border-white/10 rounded-xl group-focus-within:border-nature-green/50" />
-                      <input
-                        type="text"
-                        value={vaultName}
-                        onChange={(e) => setVaultName(e.target.value)}
-                        placeholder="e.g. Personal Vault"
-                        className="relative w-full bg-transparent border-none outline-none focus:ring-0 px-3.5 py-2.5 text-xs text-on-surface font-mono"
-                      />
-                    </div>
+                <div className="space-y-2 pt-2 border-t border-white/5">
+                  <div className="flex gap-3 items-center">
+                    <span className="text-[9px] uppercase font-bold text-on-surface-variant font-mono tracking-wider shrink-0">Vault Name:</span>
+                    <input
+                      type="text"
+                      value={vaultName}
+                      onChange={(e) => setVaultName(e.target.value)}
+                      placeholder="e.g. Personal Vault"
+                      className="flex-1 bg-surface-dark/30 border border-on-surface-variant/20 rounded-lg px-2.5 py-1 text-xs text-on-surface font-mono outline-none focus:bg-surface-dark/85 focus:border-nature-green/50 transition-all duration-200"
+                    />
                   </div>
 
                   {cloudVaults.length > 0 && (
-                    <div className="flex gap-3.5 p-4 bg-ocean-blue/10 rounded-2xl border border-ocean-blue/20 text-left">
-                      <Info className="w-5 h-5 text-ocean-blue shrink-0 mt-0.5" />
-                      <div className="space-y-1">
-                        <h4 className="text-xs font-bold uppercase text-ocean-blue tracking-wider font-mono">Existing Vaults Found</h4>
-                        <p className="text-[11px] leading-relaxed text-on-surface-variant">
-                          We found {cloudVaults.length} existing vault{cloudVaults.length > 1 ? 's' : ''} in your Google Drive. If you want to restore one of these, please go back to the restore screen.
-                        </p>
+                    <div className="group text-left pt-1">
+                      <p className="text-[10px] leading-normal text-on-surface-variant">
+                        We found {cloudVaults.length} existing vault{cloudVaults.length > 1 ? 's' : ''} in Google Drive.
                         <button
                           onClick={() => onCancel('unlock')}
-                          className="mt-2 text-xs font-mono font-bold text-ocean-blue hover:underline flex items-center gap-1"
+                          className="inline-flex items-center gap-0.5 ml-1 text-ocean-blue font-bold hover:underline opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer align-baseline"
                         >
-                          Go to Restore Screen <ArrowRight className="w-3 h-3" />
+                          Restore instead <ArrowRight className="w-2.5 h-2.5" />
                         </button>
-                      </div>
+                      </p>
                     </div>
                   )}
                 </div>
               )}
             </div>
 
-            <section className="space-y-4 px-2">
+            <section className="space-y-2.5 px-1">
               <div className="relative group">
-                <div className="absolute inset-0 glass-card rounded-2xl transition-colors group-hover:border-nature-green/30 group-focus-within:border-nature-green/50" />
-                <div className="relative flex items-center p-5 gap-4">
-                  <Lock className="w-5 h-5 text-on-surface-variant group-focus-within:text-nature-green transition-colors" />
+                <div className="absolute inset-0 glass-card rounded-xl transition-colors group-hover:border-nature-green/30 group-focus-within:border-nature-green/50" />
+                <div className="relative flex items-center p-3 gap-3">
+                  <Lock className="w-4 h-4 text-on-surface-variant group-focus-within:text-nature-green transition-colors" />
                   <input 
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter master password" 
                     value={password}
                     onChange={(e) => handlePasswordChange(e.target.value)}
                     autoFocus
-                    className="flex-1 bg-transparent border-none outline-none font-mono text-lg tracking-widest text-on-surface placeholder:text-on-surface-variant/40 focus:ring-0 p-0"
+                    className="flex-1 bg-transparent border-none outline-none font-mono text-sm tracking-widest text-on-surface placeholder:text-on-surface-variant/40 focus:ring-0 p-0"
                   />
                   <button 
                     onClick={() => setShowPassword(!showPassword)}
                     tabIndex={-1}
                     className="text-on-surface-variant hover:text-nature-green transition-colors"
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
 
               <div className="relative group">
-                <div className="absolute inset-0 glass-card rounded-2xl transition-colors group-hover:border-nature-green/30 group-focus-within:border-nature-green/50" />
-                <div className="relative flex items-center p-5 gap-4">
-                  <Lock className="w-5 h-5 text-on-surface-variant group-focus-within:text-nature-green transition-colors" />
+                <div className="absolute inset-0 glass-card rounded-xl transition-colors group-hover:border-nature-green/30 group-focus-within:border-nature-green/50" />
+                <div className="relative flex items-center p-3 gap-3">
+                  <Lock className="w-4 h-4 text-on-surface-variant group-focus-within:text-nature-green transition-colors" />
                   <input 
                     type={showPassword ? "text" : "password"}
                     placeholder="Confirm password" 
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="flex-1 bg-transparent border-none outline-none font-mono text-lg tracking-widest text-on-surface placeholder:text-on-surface-variant/40 focus:ring-0 p-0"
+                    className="flex-1 bg-transparent border-none outline-none font-mono text-sm tracking-widest text-on-surface placeholder:text-on-surface-variant/40 focus:ring-0 p-0"
                   />
                 </div>
               </div>
@@ -555,14 +545,11 @@ export default function WizardView({ onComplete, onCancel }: WizardViewProps) {
                 </div>
               )}
 
-              <div className="flex gap-4 p-4 bg-earth-clay/10 rounded-2xl border border-earth-clay/20">
-                <Shield className="w-6 h-6 text-earth-clay shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <h4 className="text-xs font-bold uppercase text-earth-clay tracking-wider font-mono">Recovery Key Warning</h4>
-                  <p className="text-[11px] leading-relaxed text-on-surface-variant">
-                    VaultFlow uses local sandboxed cryptography. If you forget your primary master password, your encrypted data CANNOT be recovered under any circumstances. There is no server backup or "Forgot Password" link.
-                  </p>
-                </div>
+              <div className="flex items-start gap-2 p-2.5 bg-earth-clay/5 border border-earth-clay/15 rounded-xl text-left">
+                <AlertCircle className="w-3.5 h-3.5 text-earth-clay shrink-0 mt-0.5" />
+                <p className="text-[10px] leading-normal text-earth-clay/90">
+                  <span className="font-bold font-mono uppercase tracking-wider text-[9px]">Recovery Warning:</span> Local sandboxed keys. If lost, your data cannot be recovered (no server backups exist).
+                </p>
               </div>
             </section>
           </div>
@@ -955,21 +942,23 @@ export default function WizardView({ onComplete, onCancel }: WizardViewProps) {
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="relative w-full max-w-[560px] bg-surface-container rounded-[36px] p-6 md:p-10 shadow-[0_0_80px_rgba(0,242,234,0.1)] border border-white/5 flex flex-col"
+        className="relative w-full max-w-[560px] max-h-[calc(100vh-2rem)] bg-surface-container rounded-[36px] p-6 md:py-8 md:px-10 shadow-[0_0_80px_rgba(0,242,234,0.1)] border border-white/5 flex flex-col"
       >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={step}
-            initial={{ x: 15, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -15, opacity: 0 }}
-            transition={{ duration: 0.15 }}
-          >
-            {renderStep()}
-          </motion.div>
-        </AnimatePresence>
+        <div className="flex-1 overflow-y-auto pr-1 min-h-0">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={step}
+              initial={{ x: 15, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -15, opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              {renderStep()}
+            </motion.div>
+          </AnimatePresence>
+        </div>
 
-        <footer className={cn("flex items-center mt-10", step === 5 ? "justify-center" : "justify-between")}>
+        <footer className={cn("flex items-center mt-6 pt-4 border-t border-white/5 shrink-0", step === 5 ? "justify-center" : "justify-between")}>
           {step < 5 && (
             <button 
               onClick={prevStep} 

@@ -542,37 +542,66 @@ export default function SettingsView({
                     <select 
                       value={timezone}
                       onChange={(e) => onUpdateConfig('timezone', e.target.value)}
-                      className="bg-surface-dark border border-on-surface/10 rounded-xl px-4 py-2 font-mono text-sm text-on-surface focus:outline-none focus:border-nature-green/50 cursor-pointer max-w-[220px]"
+                      className="bg-surface-dark border border-on-surface/10 rounded-xl px-4 py-2 font-mono text-sm text-on-surface focus:outline-none focus:border-nature-green/50 cursor-pointer max-w-[260px]"
                     >
-                      <optgroup label="System">
-                        <option className="bg-surface-dark text-on-surface" value={Intl.DateTimeFormat().resolvedOptions().timeZone}>{Intl.DateTimeFormat().resolvedOptions().timeZone} (System)</option>
-                      </optgroup>
-                      <optgroup label="Universal">
-                        <option className="bg-surface-dark text-on-surface" value="UTC">UTC</option>
-                      </optgroup>
-                      <optgroup label="Americas">
-                        <option className="bg-surface-dark text-on-surface" value="America/New_York">New York (EST/EDT)</option>
-                        <option className="bg-surface-dark text-on-surface" value="America/Chicago">Chicago (CST/CDT)</option>
-                        <option className="bg-surface-dark text-on-surface" value="America/Denver">Denver (MST/MDT)</option>
-                        <option className="bg-surface-dark text-on-surface" value="America/Los_Angeles">Los Angeles (PST/PDT)</option>
-                        <option className="bg-surface-dark text-on-surface" value="America/Sao_Paulo">São Paulo (BRT)</option>
-                      </optgroup>
-                      <optgroup label="Europe">
-                        <option className="bg-surface-dark text-on-surface" value="Europe/London">London (GMT/BST)</option>
-                        <option className="bg-surface-dark text-on-surface" value="Europe/Paris">Paris (CET/CEST)</option>
-                        <option className="bg-surface-dark text-on-surface" value="Europe/Berlin">Berlin (CET/CEST)</option>
-                        <option className="bg-surface-dark text-on-surface" value="Europe/Rome">Rome (CET/CEST)</option>
-                        <option className="bg-surface-dark text-on-surface" value="Europe/Zurich">Zurich (CET/CEST)</option>
-                        <option className="bg-surface-dark text-on-surface" value="Europe/Moscow">Moscow (MSK)</option>
-                      </optgroup>
-                      <optgroup label="Asia & Pacific">
-                        <option className="bg-surface-dark text-on-surface" value="Asia/Dubai">Dubai (GST)</option>
-                        <option className="bg-surface-dark text-on-surface" value="Asia/Kolkata">Mumbai (IST)</option>
-                        <option className="bg-surface-dark text-on-surface" value="Asia/Shanghai">Shanghai (CST)</option>
-                        <option className="bg-surface-dark text-on-surface" value="Asia/Tokyo">Tokyo (JST)</option>
-                        <option className="bg-surface-dark text-on-surface" value="Asia/Singapore">Singapore (SGT)</option>
-                        <option className="bg-surface-dark text-on-surface" value="Australia/Sydney">Sydney (AEST/AEDT)</option>
-                      </optgroup>
+                      {(() => {
+                        const systemTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                        const allTimezones = Intl.supportedValuesOf('timeZone');
+                        
+                        // Group timezones by region prefix
+                        const groups: Record<string, string[]> = {};
+                        const standalone: string[] = [];
+                        
+                        for (const tz of allTimezones) {
+                          const slashIdx = tz.indexOf('/');
+                          if (slashIdx === -1) {
+                            standalone.push(tz);
+                          } else {
+                            const region = tz.substring(0, slashIdx);
+                            if (!groups[region]) groups[region] = [];
+                            groups[region].push(tz);
+                          }
+                        }
+
+                        // Region display order
+                        const regionOrder = ['Africa', 'America', 'Antarctica', 'Arctic', 'Asia', 'Atlantic', 'Australia', 'Europe', 'Indian', 'Pacific'];
+                        const sortedRegions = regionOrder.filter(r => groups[r]);
+                        // Add any remaining regions not in the order list
+                        for (const r of Object.keys(groups)) {
+                          if (!sortedRegions.includes(r)) sortedRegions.push(r);
+                        }
+
+                        return (
+                          <>
+                            <optgroup label="System Default">
+                              <option className="bg-surface-dark text-on-surface" value={systemTz}>
+                                {systemTz.replace(/_/g, ' ')} (System)
+                              </option>
+                            </optgroup>
+                            {standalone.length > 0 && (
+                              <optgroup label="Universal">
+                                {standalone.map(tz => (
+                                  <option key={tz} className="bg-surface-dark text-on-surface" value={tz}>
+                                    {tz}
+                                  </option>
+                                ))}
+                              </optgroup>
+                            )}
+                            {sortedRegions.map(region => (
+                              <optgroup key={region} label={region}>
+                                {groups[region].map(tz => {
+                                  const city = tz.substring(tz.indexOf('/') + 1).replace(/_/g, ' ');
+                                  return (
+                                    <option key={tz} className="bg-surface-dark text-on-surface" value={tz}>
+                                      {city}
+                                    </option>
+                                  );
+                                })}
+                              </optgroup>
+                            ))}
+                          </>
+                        );
+                      })()}
                     </select>
                   </div>
 

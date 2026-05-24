@@ -6,6 +6,7 @@ import EmptyDashboardView from './components/EmptyDashboardView';
 import DashboardView from './components/DashboardView';
 import SettingsView from './components/SettingsView';
 import BudgetView from './components/BudgetView';
+import ExpectedBudgetView from './components/ExpectedBudgetView';
 import CategoryDetailsView from './components/CategoryDetailsView';
 import ManualExpenseModal from './components/ManualExpenseModal';
 import ImportModal from './components/ImportModal';
@@ -83,7 +84,10 @@ export default function App() {
   const [activeVaultName, setActiveVaultName] = useState<string>('Local Vault');
   const [activeVaultId, setActiveVaultId] = useState<string | null>(null);
   const [connectedGoogleUser, setConnectedGoogleUser] = useState<any | null>(null);
-  const [syncInterval, setSyncInterval] = useState<number>(60000);
+  const [syncInterval, setSyncInterval] = useState<number>(() => {
+    const saved = localStorage.getItem('vaultflow_sync_interval');
+    return saved ? Number(saved) : 60000;
+  });
   const [isCreateLedgerModalOpen, setIsCreateLedgerModalOpen] = useState(false);
   const [hasUnsyncedChanges, setHasUnsyncedChanges] = useState<boolean>(false);
   const [backupEnabled, setBackupEnabled] = useState<boolean>(true);
@@ -116,7 +120,6 @@ export default function App() {
         const storedLanguage = await getConfig('language');
         const storedVaultId = await getConfig('active_vault_id');
         const storedVaultName = await getConfig('active_vault_name');
-        const storedInterval = await getConfig('backup_interval');
         const storedHasUnsynced = await getConfig('has_unsynced_changes');
         const storedBackupEnabled = await getConfig('backup_enabled');
         const storedLastSync = await getConfig('last_synced_at');
@@ -129,7 +132,8 @@ export default function App() {
         if (storedVaultId) setActiveVaultId(storedVaultId);
         if (storedVaultName) setActiveVaultName(storedVaultName);
         if (storedGoogleUser) setConnectedGoogleUser(storedGoogleUser);
-        if (typeof storedInterval === 'number') setSyncInterval(storedInterval);
+        // Note: syncInterval is a local user preference stored in localStorage,
+        // already initialized from useState. We do NOT override it from IndexedDB.
         if (storedHasUnsynced !== undefined) setHasUnsyncedChanges(!!storedHasUnsynced);
         if (storedBackupEnabled !== undefined) setBackupEnabled(storedBackupEnabled !== false);
         if (keepLocal !== undefined) setKeepCloudVaultLocal(keepLocal === true);
@@ -211,13 +215,32 @@ export default function App() {
 
       await saveCloudManifest(googleUser.email, manifest);
 
-      // Save transactions
+      // Prepare encrypted expected budget data if activeKey exists
+      let encryptedExpectedBudget = undefined;
+      if (activeKey) {
+        const storedVersions = await getConfig('expected_budget_versions');
+        const storedActiveId = await getConfig('active_expected_budget_version_id');
+        if (storedVersions) {
+          const payload = JSON.stringify({
+            versions: JSON.parse(storedVersions),
+            activeVersionId: storedActiveId
+          });
+          const { cipherText, iv } = await encryptPayload(payload, activeKey);
+          encryptedExpectedBudget = {
+            payload: cipherText,
+            iv
+          };
+        }
+      }
+
+      // Save transactions and expected budget
       const cloudPayload = {
         transactions: encryptedRows.map(row => ({
           id: row.id,
           payload: row.payload,
           iv: row.iv
-        }))
+        })),
+        expectedBudget: encryptedExpectedBudget
       };
 
       await saveCloudVaultData(googleUser.email, vaultId, cloudPayload);
@@ -280,14 +303,15 @@ export default function App() {
     const storedDateFormat = await getConfig('date_format');
     const storedGoogleUser = await getConfig('google_user');
     const storedVaultName = await getConfig('active_vault_name');
-    const storedInterval = await getConfig('backup_interval');
+    const storedVaultId = await getConfig('active_vault_id');
 
     if (storedCurrency) setCurrency(storedCurrency);
     if (storedSeparator !== undefined && storedSeparator !== null) setThousandsSeparator(storedSeparator);
     if (storedDateFormat) setDateFormat(storedDateFormat);
     if (storedGoogleUser) setConnectedGoogleUser(storedGoogleUser);
     if (storedVaultName) setActiveVaultName(storedVaultName);
-    if (typeof storedInterval === 'number') setSyncInterval(storedInterval);
+    if (storedVaultId) setActiveVaultId(storedVaultId);
+    // syncInterval is a local user preference (localStorage), not overridden from IndexedDB.
     
     await saveConfig('has_unsynced_changes', false);
     setHasUnsyncedChanges(false);
@@ -411,6 +435,7 @@ export default function App() {
     setActiveVaultId(null);
     setConnectedGoogleUser(null);
     setSyncInterval(60000);
+    localStorage.setItem('vaultflow_sync_interval', '60000');
     setHasUnsyncedChanges(false);
     setState(prev => ({
       ...prev,
@@ -512,14 +537,13 @@ export default function App() {
     const resolvedLanguage = languageVal || 'en';
     setTimezone(resolvedTimezone);
     setLanguage(resolvedLanguage);
+    setActiveVaultId(vaultId);
     setActiveVaultName(vaultName);
     setLastSyncSuccess(lastSavedVal);
 
-    const resolvedBackupInterval = backupIntervalVal !== undefined ? backupIntervalVal : 60000;
+    // syncInterval is a local user preference (localStorage), not overridden from cloud config.
     const resolvedBackupEnabled = backupEnabledVal !== undefined ? backupEnabledVal : true;
     const resolvedKeepLocal = keepLocalVal !== undefined ? keepLocalVal : false;
-
-    setSyncInterval(resolvedBackupInterval);
     setBackupEnabled(resolvedBackupEnabled);
     setKeepCloudVaultLocal(resolvedKeepLocal);
 
@@ -660,6 +684,26 @@ export default function App() {
         }
       }
 
+      // 3.5. Decrypt and restore expected budget if present in cloud data
+      if (cloudData.expectedBudget) {
+        try {
+          const plaintext = await decryptPayload(
+            cloudData.expectedBudget.payload,
+            cloudData.expectedBudget.iv,
+            key
+          );
+          const parsed = JSON.parse(plaintext);
+          if (parsed && parsed.versions) {
+            await saveConfig('expected_budget_versions', JSON.stringify(parsed.versions));
+          }
+          if (parsed && parsed.activeVersionId) {
+            await saveConfig('active_expected_budget_version_id', parsed.activeVersionId);
+          }
+        } catch (e) {
+          console.error('Failed to decrypt expected budget on vault switch:', e);
+        }
+      }
+
       // 4. Save new vault configs
       await saveConfig('encryption_salt', vaultSalt);
       await saveConfig('challenge_hash', vaultChallenge);
@@ -677,11 +721,10 @@ export default function App() {
       await saveConfig('last_synced_at', lastSaved);
 
       // Restore/set sync configurations
-      const backupIntervalVal = config.backup_interval !== undefined ? config.backup_interval : 60000;
+      // syncInterval is a local user preference (localStorage), not overridden from cloud config.
       const backupEnabledVal = config.backup_enabled !== undefined ? config.backup_enabled : true;
       const keepLocalVal = config.keep_cloud_vault_local !== undefined ? config.keep_cloud_vault_local : false;
 
-      await saveConfig('backup_interval', backupIntervalVal);
       await saveConfig('backup_enabled', backupEnabledVal);
       await saveConfig('keep_cloud_vault_local', keepLocalVal);
 
@@ -697,7 +740,6 @@ export default function App() {
       setDateFormat(config.date_format);
       setTimezone(targetTimezone);
       setLanguage(targetLanguage);
-      setSyncInterval(backupIntervalVal);
       setBackupEnabled(backupEnabledVal);
       setKeepCloudVaultLocal(keepLocalVal);
       setHasUnsyncedChanges(false);
@@ -723,7 +765,10 @@ export default function App() {
     if (key === 'currency') setCurrency(value);
     if (key === 'thousands_separator') setThousandsSeparator(value);
     if (key === 'date_format') setDateFormat(value);
-    if (key === 'backup_interval') setSyncInterval(value);
+    if (key === 'backup_interval') {
+      setSyncInterval(value);
+      localStorage.setItem('vaultflow_sync_interval', String(value));
+    }
     if (key === 'google_user') setConnectedGoogleUser(value);
     if (key === 'active_vault_name') setActiveVaultName(value || 'Local Vault');
     if (key === 'active_vault_id') setActiveVaultId(value);
@@ -779,6 +824,7 @@ export default function App() {
               onSetBudget={() => setView('budget')}
               onConfigureBackup={() => setView('settings')}
               onSettings={() => setView('settings')}
+              onExpectedBudget={() => setView('expected-budget')}
               onLock={() => window.location.reload()}
               theme={resolvedTheme}
               onToggleTheme={handleToggleTheme}
@@ -802,6 +848,7 @@ export default function App() {
               onToggleTheme={handleToggleTheme}
               onSettings={() => setView('settings')}
               onSetBudget={() => setView('budget')}
+              onExpectedBudget={() => setView('expected-budget')}
               onLock={() => window.location.reload()}
               onViewCategory={(catId) => setState(prev => ({ ...prev, view: 'category-details', activeCategory: catId }))}
               currency={currency}
@@ -854,6 +901,17 @@ export default function App() {
             <BudgetView 
               onBack={() => setView(transactions.length > 0 ? 'dashboard' : 'empty-dashboard')}
               onSaved={() => setView(transactions.length > 0 ? 'dashboard' : 'empty-dashboard')}
+              currency={currency}
+              thousandsSeparator={thousandsSeparator}
+            />
+          </motion.div>
+        )}
+
+        {state.view === 'expected-budget' && (
+          <motion.div key="expected-budget" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <ExpectedBudgetView 
+              onBack={() => setView(transactions.length > 0 ? 'dashboard' : 'empty-dashboard')}
+              onSync={performCloudSync}
               currency={currency}
               thousandsSeparator={thousandsSeparator}
             />

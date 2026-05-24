@@ -36,6 +36,10 @@ export interface EncryptedVaultData {
     payload: string;
     iv: string;
   }[];
+  expectedBudget?: {
+    payload: string;
+    iv: string;
+  };
 }
 
 export interface GoogleUser {

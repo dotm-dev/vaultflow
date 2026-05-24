@@ -1,4 +1,4 @@
-export type AppView = 'landing' | 'wizard' | 'empty-dashboard' | 'dashboard' | 'unlock' | 'settings' | 'budget' | 'category-details';
+export type AppView = 'landing' | 'wizard' | 'empty-dashboard' | 'dashboard' | 'unlock' | 'settings' | 'budget' | 'category-details' | 'expected-budget';
 
 export interface Transaction {
   id: string;

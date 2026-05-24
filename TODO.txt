@@ -1,0 +1,167 @@
+================================================================================
+  VAULTFLOW — PROJECT TODO
+================================================================================
+
+
+────────────────────────────────────────────────────────────────────────────────
+  LATEST CHANGES (May 2026)
+────────────────────────────────────────────────────────────────────────────────
+
+  [DONE] Sync interval persistence
+         - Automation sync interval (30s / 1min / 5min / 10min) now saves to
+           IndexedDB and syncs to Google Drive manifest config.
+         - Restored correctly on vault switch, cloud unlock, and app reload.
+         - backup_enabled and keep_cloud_vault_local also persist across
+           sessions.
+
+  [DONE] Unequivocal date format labels
+         - Date format dropdown options now show real example dates
+           (e.g. "May 19, 2026", "19.05.2026") instead of abstract tokens
+           like "DD MM YYYY".
+         - Applied in both SettingsView and WizardView onboarding.
+
+  [DONE] Timezone selector (global)
+         - Timezone dropdown in Settings > Regional Settings with 18 IANA
+           zones grouped by region (System, UTC, Americas, Europe, Asia).
+         - Changing timezone instantly recalculates:
+             • Dashboard spend velocity charts (1M/3M/6M/1Y)
+             • Current month category spend boundaries
+             • Category details 6-month trend chart
+             • Category details time filters (this_month, last_3_months,
+               this_year, custom date range)
+             • Transaction date labels and detail modal timestamps
+             • Manual expense modal live clock
+             • Last sync and vault lastSaved timestamps
+         - Persists to IndexedDB, syncs to Google Drive, restores on unlock
+           and vault switch.
+
+  [DONE] Language selector (mockup)
+         - Language dropdown in Settings with 7 options: English, Italiano,
+           Deutsch, Français, Español, 日本語, 中文.
+         - Selection persists and syncs but does not yet translate the UI
+           (mockup only).
+
+  [DONE] Timezone utility functions (src/lib/formatters.ts)
+         - getTimezoneDateParts() — extract date parts in any IANA timezone
+         - getTimestampFromParts() — convert timezone-local calendar date
+           back to Unix ms
+         - formatTime() — render HH:MM or HH:MM:SS in selected timezone
+         - formatDate() — updated to accept optional timezone parameter
+
+  [DONE] README and .gitignore
+         - Full README with features, tech stack, project structure, and
+           setup instructions.
+         - Comprehensive .gitignore excluding build artifacts, secrets,
+           node_modules, IDE files.
+
+  [DONE] Light/dark mode toggle visibility
+         - Fixed toggle button contrast in light mode.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  REMAINING WORK
+────────────────────────────────────────────────────────────────────────────────
+
+  HIGH PRIORITY
+  ─────────────
+
+  [ ] Internationalization (i18n)
+      - Implement actual translation system using the language selector.
+      - Extract all UI strings to locale JSON files.
+      - Wire language state to a translation provider (e.g. react-intl
+        or a lightweight custom solution).
+
+  [ ] Recurring transactions engine
+      - The ManualExpenseModal captures recurrence settings (interval, unit)
+        but they are not processed yet.
+      - Implement a background scheduler that auto-generates recurring
+        transactions on their due dates.
+
+  [ ] Data integrity & conflict resolution
+      - Handle merge conflicts when the same vault is edited on two devices
+        before syncing.
+      - Add a transaction-level diff/merge strategy for cloud sync.
+
+  [ ] Input validation & error handling
+      - Sanitize and validate all user inputs more thoroughly.
+      - Add toast/snackbar notifications for sync errors, save failures,
+        and import issues instead of console.error + alert().
+
+
+  MEDIUM PRIORITY
+  ───────────────
+
+  [ ] CSV import improvements
+      - Support more bank statement formats (PDF parsing, OFX/QIF).
+      - Add a column mapping UI for unrecognized CSV layouts.
+      - Batch re-categorization after import.
+
+  [ ] Dashboard enhancements
+      - Add income vs. expense comparison chart.
+      - Add a "Financial Health Score" gamification widget as described
+        in design.md.
+      - Show year-over-year trends.
+
+  [ ] Budget alerts
+      - Push browser notifications when approaching or exceeding budget
+        limits.
+      - Visual warning indicators on the dashboard category cards.
+
+  [ ] Search & filtering
+      - Add a global transaction search bar.
+      - Advanced multi-category filtering on the dashboard.
+
+  [ ] Export improvements
+      - Export to CSV in addition to JSON.
+      - Filtered exports (date range, category, amount range).
+
+  [ ] PWA support
+      - Add a service worker and web manifest for installable PWA.
+      - Offline-first with background sync when connectivity returns.
+
+
+  LOW PRIORITY / NICE TO HAVE
+  ───────────────────────────
+
+  [ ] Multi-currency support
+      - Track transactions in multiple currencies with exchange rates.
+      - Currency conversion in dashboard totals.
+
+  [ ] Transaction attachments
+      - Attach receipt photos stored as encrypted blobs in IndexedDB.
+
+  [ ] Shared vaults
+      - Allow two users to share a vault for family/couple budgeting
+        (would require a key-exchange protocol).
+
+  [ ] Data visualization upgrades
+      - Sankey diagram for money flow.
+      - Heatmap calendar view of daily spending.
+      - Pie/donut charts for category distribution.
+
+  [ ] Accessibility audit
+      - Full keyboard navigation for all modals and interactive elements.
+      - Screen reader labels and ARIA attributes.
+      - Color contrast verification for all theme variants.
+
+  [ ] Testing
+      - Unit tests for crypto, formatters, CSV parsing, and sync logic.
+      - Integration tests for the wizard and unlock flows.
+      - E2E tests with Playwright or Cypress.
+
+  [ ] CI/CD pipeline
+      - GitHub Actions workflow for lint, type-check, build, and test.
+      - Automated deployment to a static hosting platform.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  TECH DEBT
+────────────────────────────────────────────────────────────────────────────────
+
+  [ ] Rename package from "react-example" to "vaultflow" in package.json.
+  [ ] Extract magic numbers (sync intervals, animation durations) to
+      constants.
+  [ ] Split App.tsx (~900 lines) into smaller modules / custom hooks.
+  [ ] Add proper error boundaries for React component crashes.
+  [ ] Deduplicate monthsAbbr arrays used across multiple components into
+      a shared constant in formatters.ts.

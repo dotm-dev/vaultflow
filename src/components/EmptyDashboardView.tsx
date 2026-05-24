@@ -9,6 +9,7 @@ interface EmptyDashboardViewProps {
   onSetBudget: () => void;
   onConfigureBackup: () => void;
   onSettings: () => void;
+  onExpectedBudget: () => void;
   onLock: () => void;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
@@ -24,6 +25,7 @@ export default function EmptyDashboardView({
   onSetBudget, 
   onConfigureBackup, 
   onSettings, 
+  onExpectedBudget,
   onLock, 
   theme, 
   onToggleTheme, 
@@ -147,6 +149,9 @@ export default function EmptyDashboardView({
 
           {/* Right Side: Buttons */}
           <div className="flex items-center gap-3">
+            <button onClick={onExpectedBudget} className="px-4 h-8 rounded-full flex items-center justify-center text-[9px] font-bold uppercase tracking-widest bg-ocean-blue/15 text-ocean-blue border border-ocean-blue/30 hover:bg-ocean-blue/25 hover:border-ocean-blue/40 hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-[0_0_12px_rgba(92,124,138,0.1)] shrink-0">
+              Planner
+            </button>
             <button 
               onClick={onToggleTheme}
               className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 text-on-surface-variant hover:text-nature-green transition-all cursor-pointer"
