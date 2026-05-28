@@ -5,7 +5,7 @@ import { cn } from '@/src/lib/utils';
 import { getConfig, saveConfig } from '../lib/db';
 import { signInWithGoogle, signOutGoogle, getCloudManifest, isGoogleConnected, GoogleUser, VaultProfile, deleteCloudVault } from '../lib/googleDriveSync';
 import { hashPasswordForChallenge, hexToBytes } from '../lib/crypto';
-import { formatDate, formatTime, formatAmount } from '../lib/formatters';
+import { formatDate, formatTime, formatAmount, getTimezoneDateParts, getTimestampFromParts } from '../lib/formatters';
 import { Transaction } from '../types';
 import { calculateNextOccurrence } from '../App';
 import { useCategories, ICON_MAP } from '../lib/categories';
@@ -88,6 +88,53 @@ export default function SettingsView({
 }: SettingsViewProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'preferences' | 'backup' | 'security' | 'recurring'>('preferences');
+
+  const [creationBalanceVal, setCreationBalanceVal] = useState('0');
+  const [ledgerCreatedAtVal, setLedgerCreatedAtVal] = useState<number>(0);
+  const [creationDateString, setCreationDateString] = useState('');
+
+  useEffect(() => {
+    async function loadLedgerConfig() {
+      const storedBal = await getConfig('creation_balance');
+      const storedCreated = await getConfig('ledger_created_at');
+      if (storedBal !== undefined && storedBal !== null) {
+        setCreationBalanceVal(storedBal);
+      }
+      if (storedCreated !== undefined && storedCreated !== null) {
+        setLedgerCreatedAtVal(Number(storedCreated));
+        // Format to YYYY-MM-DD in timezone
+        const parts = getTimezoneDateParts(Number(storedCreated), timezone);
+        const y = parts.year;
+        const m = String(parts.month).padStart(2, '0');
+        const day = String(parts.day).padStart(2, '0');
+        setCreationDateString(`${y}-${m}-${day}`);
+      }
+    }
+    loadLedgerConfig();
+  }, [timezone]);
+
+  const handleUpdateCreationBalance = async (val: string) => {
+    setCreationBalanceVal(val);
+    await onUpdateConfig('creation_balance', val);
+  };
+
+  const handleUpdateCreationDate = async (dateStr: string) => {
+    setCreationDateString(dateStr);
+    if (!dateStr) return;
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const originalParts = getTimezoneDateParts(ledgerCreatedAtVal || Date.now(), timezone);
+    const newTimestamp = getTimestampFromParts(
+      y, 
+      m, 
+      d, 
+      originalParts.hour, 
+      originalParts.minute, 
+      originalParts.second, 
+      timezone
+    );
+    setLedgerCreatedAtVal(newTimestamp);
+    await onUpdateConfig('ledger_created_at', newTimestamp);
+  };
 
   // Cloud vault management state
   const [cloudVaults, setCloudVaults] = useState<VaultProfile[]>([]);
@@ -777,6 +824,58 @@ export default function SettingsView({
                       <option className="bg-surface-dark text-on-surface" value="ja">日本語</option>
                       <option className="bg-surface-dark text-on-surface" value="zh">中文</option>
                     </select>
+                  </div>
+                </div>
+              </section>
+
+              {/* Ledger Configuration Section */}
+              <section className="w-full flex flex-col gap-4">
+                <h2 className="font-mono text-xs text-on-surface-variant uppercase tracking-widest font-bold px-2">Ledger Settings</h2>
+                
+                <div className="glass-card rounded-2xl flex flex-col divide-y divide-on-surface/10 dark:divide-white/5 overflow-hidden">
+                  {/* Starting Balance Input */}
+                  <div className="p-5 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-on-surface/5 flex items-center justify-center">
+                        <Coins className="w-5 h-5 text-nature-green" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-on-surface">Starting Balance</div>
+                        <div className="text-xs text-on-surface-variant mt-0.5 font-mono">The balance of your ledger before any transactions are applied</div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 max-w-[180px] bg-surface-dark border border-on-surface/10 rounded-xl px-3 py-1.5 focus-within:border-nature-green/50">
+                      <span className="text-on-surface-variant font-mono">{currency}</span>
+                      <input 
+                        type="number"
+                        step="any"
+                        value={creationBalanceVal}
+                        onChange={(e) => handleUpdateCreationBalance(e.target.value)}
+                        className="w-full bg-transparent border-none outline-none font-mono text-sm text-on-surface focus:ring-0 p-0 text-right"
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Ledger Creation Date Input */}
+                  <div className="p-5 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-on-surface/5 flex items-center justify-center">
+                        <Calendar className="w-5 h-5 text-on-surface-variant" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-on-surface">Creation Date</div>
+                        <div className="text-xs text-on-surface-variant mt-0.5 font-mono">Pivots how past and future balances are calculated</div>
+                      </div>
+                    </div>
+                    
+                    <input 
+                      type="date"
+                      value={creationDateString}
+                      onChange={(e) => handleUpdateCreationDate(e.target.value)}
+                      className="bg-surface-dark border border-on-surface/10 rounded-xl px-4 py-2 font-mono text-sm text-on-surface focus:outline-none focus:border-nature-green/50 cursor-pointer max-w-[180px]"
+                    />
                   </div>
                 </div>
               </section>

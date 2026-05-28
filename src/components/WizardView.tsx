@@ -398,8 +398,9 @@ export default function WizardView({ onComplete, onCancel }: WizardViewProps) {
     } else if (step === 5) {
       // Finalize Onboarding Setup
       setIsFinishing(true);
+      const now = Date.now();
       await saveConfig('ai_consent', aiConsent);
-      await saveConfig('ledger_created_at', Date.now());
+      await saveConfig('ledger_created_at', now);
 
       try {
         setFinishProgress('Encrypting database ledger...');
@@ -475,7 +476,7 @@ export default function WizardView({ onComplete, onCancel }: WizardViewProps) {
               name: vaultName,
               salt: saltHex,
               challenge: challenge,
-              lastSaved: Date.now(),
+              lastSaved: now,
               config: {
                 currency: currency,
                 thousands_separator: thousandsSeparator,
@@ -484,7 +485,10 @@ export default function WizardView({ onComplete, onCancel }: WizardViewProps) {
                 backup_enabled: autoSync,
                 keep_cloud_vault_local: false,
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                language: 'en'
+                language: 'en',
+                creation_balance: startingBalance,
+                ledger_created_at: now,
+                fixed_categories: JSON.stringify(['home', 'utilities', 'health'])
               }
             };
 

@@ -1159,6 +1159,11 @@ export default function App() {
         console.error('Failed to parse fixed categories in handleUpdateConfig:', e);
       }
     }
+
+    if (key !== 'has_unsynced_changes' && key !== 'last_synced_at') {
+      await saveConfig('has_unsynced_changes', true);
+      setHasUnsyncedChanges(true);
+    }
   };
 
   return (
